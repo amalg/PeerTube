@@ -571,6 +571,9 @@ function customConfig (): CustomConfig {
         url: CONFIG.SEARCH.SEARCH_INDEX.URL,
         disableLocalSearch: CONFIG.SEARCH.SEARCH_INDEX.DISABLE_LOCAL_SEARCH,
         isDefaultSearch: CONFIG.SEARCH.SEARCH_INDEX.IS_DEFAULT_SEARCH
+      },
+      extendedSearch: {
+        enabled: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED
       }
     },
     storyboards: {

@@ -956,6 +956,10 @@ search:
     is_default_search:
       __name: PEERTUBE_SEARCH_SEARCH_INDEX_IS_DEFAULT_SEARCH
       __format: json
+  extended_search:
+    enabled:
+      __name: PEERTUBE_SEARCH_EXTENDED_SEARCH_ENABLED
+      __format: json
 
 client:
   new_features_info:

@@ -142,6 +142,8 @@ export const customConfigUpdateValidator = [
   body('search.searchIndex.disableLocalSearch').isBoolean(),
   body('search.searchIndex.isDefaultSearch').isBoolean(),
 
+  body('search.extendedSearch.enabled').isBoolean(),
+
   body('defaults.publish.commentsPolicy').custom(isVideoCommentsPolicyValid),
   body('defaults.publish.privacy').custom(isVideoPrivacyValid),
   body('defaults.publish.licence').optional().custom(isVideoLicenceValid),

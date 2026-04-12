@@ -773,6 +773,21 @@
         </div>
       </ng-container>
 
+      <ng-container formGroupName="extendedSearch">
+        <div class="form-group">
+          <my-peertube-checkbox
+            inputName="searchExtendedSearchEnabled"
+            formControlName="enabled"
+            i18n-labelText
+            labelText="Enable extended search"
+            >
+            <ng-container ngProjectAs="description">
+              <span i18n>When enabled, searches will also match against video descriptions and playlist descriptions, not just titles. This applies to both public search and user library search.</span>
+            </ng-container>
+          </my-peertube-checkbox>
+        </div>
+      </ng-container>
+
       <ng-container formGroupName="searchIndex">
         <div class="form-group">
           <my-peertube-checkbox inputName="searchIndexEnabled" formControlName="enabled" i18n-labelText labelText="Enable global search">

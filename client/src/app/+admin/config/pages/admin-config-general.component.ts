@@ -182,6 +182,9 @@ type Form = {
       disableLocalSearch: FormControl<boolean>
       isDefaultSearch: FormControl<boolean>
     }>
+    extendedSearch: FormGroup<{
+      enabled: FormControl<boolean>
+    }>
   }>
 
   storyboards: FormGroup<{
@@ -433,6 +436,9 @@ export class AdminConfigGeneralComponent implements OnInit, OnDestroy, CanCompon
           url: URL_VALIDATOR,
           disableLocalSearch: null,
           isDefaultSearch: null
+        },
+        extendedSearch: {
+          enabled: null
         }
       },
       storyboards: {

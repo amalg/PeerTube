@@ -15,6 +15,7 @@ export interface ListVideoPlaylistsOptions extends AbstractListQueryOptions {
   videoChannelId?: number
   listMyPlaylists?: boolean
   search?: string
+  extendedSearch?: boolean
   host?: string
   uuids?: string[]
   channelNameOneOf?: string[]
@@ -139,16 +140,34 @@ export class VideoPlaylistListQueryBuilder extends AbstractListQuery {
       const escapedSearch = this.sequelize.escape(this.options.search)
       const escapedLikeSearch = this.sequelize.escape('%' + this.options.search + '%')
 
-      this.subQueryAttributes.push(
-        `word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("VideoPlaylistModel"."name"))) as similarity`
-      )
+      if (this.options.extendedSearch) {
+        this.subQueryAttributes.push(
+          `GREATEST(` +
+            `word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("VideoPlaylistModel"."name"))), ` +
+            `COALESCE(word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent(COALESCE("VideoPlaylistModel"."description", '')))), 0) * 0.5` +
+          `) as similarity`
+        )
 
-      where.push(
-        `(` +
-          `lower(immutable_unaccent(${escapedSearch})) <% lower(immutable_unaccent("VideoPlaylistModel"."name")) OR ` +
-          `lower(immutable_unaccent("VideoPlaylistModel"."name")) LIKE lower(immutable_unaccent(${escapedLikeSearch}))` +
+        where.push(
+          `(` +
+            `lower(immutable_unaccent(${escapedSearch})) <% lower(immutable_unaccent("VideoPlaylistModel"."name")) OR ` +
+            `lower(immutable_unaccent("VideoPlaylistModel"."name")) LIKE lower(immutable_unaccent(${escapedLikeSearch})) OR ` +
+            `lower(immutable_unaccent(${escapedSearch})) <% lower(immutable_unaccent(COALESCE("VideoPlaylistModel"."description", ''))) OR ` +
+            `lower(immutable_unaccent(COALESCE("VideoPlaylistModel"."description", ''))) LIKE lower(immutable_unaccent(${escapedLikeSearch}))` +
           `)`
-      )
+        )
+      } else {
+        this.subQueryAttributes.push(
+          `word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("VideoPlaylistModel"."name"))) as similarity`
+        )
+
+        where.push(
+          `(` +
+            `lower(immutable_unaccent(${escapedSearch})) <% lower(immutable_unaccent("VideoPlaylistModel"."name")) OR ` +
+            `lower(immutable_unaccent("VideoPlaylistModel"."name")) LIKE lower(immutable_unaccent(${escapedLikeSearch}))` +
+          `)`
+        )
+      }
     } else {
       this.subQueryAttributes.push('0 as similarity')
     }

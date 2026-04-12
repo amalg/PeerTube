@@ -270,7 +270,7 @@ export class VideoPlaylistModel extends SequelizeModel<VideoPlaylistModel> {
   }
 
   static searchForApi (
-    options: Pick<ListVideoPlaylistsOptions, 'followerActorId' | 'search' | 'host' | 'uuids' | 'start' | 'count' | 'sort'>
+    options: Pick<ListVideoPlaylistsOptions, 'followerActorId' | 'search' | 'extendedSearch' | 'host' | 'uuids' | 'start' | 'count' | 'sort'>
   ) {
     return VideoPlaylistModel.listForApi({
       ...options,

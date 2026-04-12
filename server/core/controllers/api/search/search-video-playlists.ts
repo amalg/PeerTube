@@ -89,7 +89,8 @@ async function searchVideoPlaylistsDB (query: VideoPlaylistsSearchQueryAfterSani
   const apiOptions = await Hooks.wrapObject({
     ...query,
 
-    followerActorId: serverActor.id
+    followerActorId: serverActor.id,
+    extendedSearch: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED
   }, 'filter:api.search.video-playlists.local.list.params')
 
   const resultList = await Hooks.wrapPromiseFun(

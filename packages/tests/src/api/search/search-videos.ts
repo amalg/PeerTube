@@ -582,6 +582,66 @@ describe('Test videos search', function () {
     }
   })
 
+  describe('Extended search', function () {
+    before(async function () {
+      this.timeout(60000)
+
+      await server.videos.upload({ attributes: { name: 'description test video', description: 'This video is about cyberpunk dystopian futures' } })
+      await server.videos.upload({ attributes: { name: 'another ordinary video', description: 'Nothing special in this description' } })
+    })
+
+    it('Should not find video by description when extended search is disabled', async function () {
+      await server.config.updateExistingConfig({
+        newConfig: {
+          search: {
+            extendedSearch: {
+              enabled: false
+            }
+          }
+        }
+      })
+
+      const body = await command.searchVideos({ search: 'cyberpunk dystopian' })
+      expect(body.total).to.equal(0)
+    })
+
+    it('Should find video by description when extended search is enabled', async function () {
+      await server.config.updateExistingConfig({
+        newConfig: {
+          search: {
+            extendedSearch: {
+              enabled: true
+            }
+          }
+        }
+      })
+
+      const body = await command.searchVideos({ search: 'cyberpunk dystopian' })
+      expect(body.total).to.be.greaterThan(0)
+      expect(body.data[0].name).to.equal('description test video')
+    })
+
+    it('Should still rank title matches higher than description matches', async function () {
+      await server.videos.upload({ attributes: { name: 'cyberpunk title match', description: 'unrelated description content' } })
+
+      const body = await command.searchVideos({ search: 'cyberpunk' })
+      expect(body.data).to.have.length.greaterThan(1)
+      expect(body.data[0].name).to.equal('cyberpunk title match')
+    })
+
+    after(async function () {
+      await server.config.updateExistingConfig({
+        newConfig: {
+          search: {
+            extendedSearch: {
+              enabled: false
+            }
+          }
+        }
+      })
+    })
+  })
+
   after(async function () {
     await cleanupTests([ server ])
   })

@@ -174,6 +174,43 @@ describe('Test playlists search', function () {
     expect(body.data).to.have.lengthOf(0)
   })
 
+  describe('Extended search', function () {
+    before(async function () {
+      this.timeout(60000)
+
+      const videoId = (await server.videos.upload()).uuid
+
+      const attributes = {
+        displayName: 'My Cool Playlist',
+        description: 'A curated collection of retro gaming speedruns',
+        privacy: VideoPlaylistPrivacy.PUBLIC,
+        videoChannelId: server.store.channel.id
+      }
+      const created = await server.playlists.create({ attributes })
+
+      await server.playlists.addElement({ playlistId: created.id, attributes: { videoId } })
+    })
+
+    it('Should not find playlist by description when extended search is disabled', async function () {
+      await server.config.updateExistingConfig({ newConfig: { search: { extendedSearch: { enabled: false } } } })
+
+      const body = await command.searchPlaylists({ search: 'retro gaming speedruns' })
+      expect(body.total).to.equal(0)
+    })
+
+    it('Should find playlist by description when extended search is enabled', async function () {
+      await server.config.updateExistingConfig({ newConfig: { search: { extendedSearch: { enabled: true } } } })
+
+      const body = await command.searchPlaylists({ search: 'retro gaming speedruns' })
+      expect(body.total).to.be.greaterThan(0)
+      expect(body.data[0].displayName).to.equal('My Cool Playlist')
+    })
+
+    after(async function () {
+      await server.config.updateExistingConfig({ newConfig: { search: { extendedSearch: { enabled: false } } } })
+    })
+  })
+
   after(async function () {
     await cleanupTests([ server, remoteServer ])
   })

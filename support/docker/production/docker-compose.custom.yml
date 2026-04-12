@@ -1,0 +1,15 @@
+# Docker Compose override to build PeerTube from local source instead of pulling the official image.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.custom.yml up -d --build
+#
+# To rebuild after pulling new changes:
+#   git pull
+#   docker compose -f docker-compose.yml -f docker-compose.custom.yml up -d --build
+
+services:
+  peertube:
+    build:
+      context: ../../../
+      dockerfile: support/docker/production/Dockerfile
+    image: peertube-custom:latest

@@ -36,6 +36,16 @@ export class MyFollowersComponent implements OnInit {
 
   inputFilters: AdvancedFilterDef<{ channel: string }>[]
 
+  private instanceHost = window.location.hostname
+
+  get localFollowers (): ActorFollow[] {
+    return this.follows.filter(f => f.follower.host === this.instanceHost)
+  }
+
+  get remoteFollowers (): ActorFollow[] {
+    return this.follows.filter(f => f.follower.host !== this.instanceHost)
+  }
+
   ngOnInit () {
     this.inputFilters = [
       {

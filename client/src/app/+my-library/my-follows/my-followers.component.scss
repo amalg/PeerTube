@@ -12,6 +12,19 @@ input[type=text] {
   @include peertube-input-text(300px);
 }
 
+.section-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid $separator-border-color;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
 .actor {
   @include actor-row($min-height: auto, $separator: true);
 }

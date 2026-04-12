@@ -15,24 +15,53 @@
 }
 
 <div class="actors" myInfiniteScroller (nearOfBottom)="onNearOfBottom()" [dataObservable]="onDataSubject.asObservable()">
-  @for (follow of follows; track follow) {
-    <div class="actor">
-      <my-actor-avatar [actor]="follow.follower" actorType="account" [href]="follow.follower.url" size="40"></my-actor-avatar>
 
-      <div class="actor-info">
-        <a [href]="follow.follower.url" class="actor-names" rel="noopener noreferrer" target="_blank" i18n-title title="Follower page">
-          <div class="actor-display-name">{{ follow.follower.name + '@' + follow.follower.host }}</div>
-          <my-global-icon iconName="external-link"></my-global-icon>
-        </a>
+  @if (localFollowers.length > 0) {
+    <h3 class="section-title" i18n>Local Subscribers</h3>
+    @for (follow of localFollowers; track follow) {
+      <div class="actor">
+        <my-actor-avatar [actor]="follow.follower" actorType="account" [href]="follow.follower.url" size="40"></my-actor-avatar>
 
-        <div class="small muted">
-          @if (isFollowingAccount(follow)) {
-            <ng-container i18n>Is following all your channels</ng-container>
-          } @else {
-            <ng-container i18n>Is following your channel {{ follow.following.name }}</ng-container>
-          }
+        <div class="actor-info">
+          <a [href]="follow.follower.url" class="actor-names" rel="noopener noreferrer" target="_blank" i18n-title title="Follower page">
+            <div class="actor-display-name">{{ follow.follower.name + '@' + follow.follower.host }}</div>
+            <my-global-icon iconName="external-link"></my-global-icon>
+          </a>
+
+          <div class="small muted">
+            @if (isFollowingAccount(follow)) {
+              <ng-container i18n>Is following all your channels</ng-container>
+            } @else {
+              <ng-container i18n>Is following your channel {{ follow.following.name }}</ng-container>
+            }
+          </div>
         </div>
       </div>
-    </div>
+    }
   }
+
+  @if (remoteFollowers.length > 0) {
+    <h3 class="section-title" i18n>Federated Subscribers</h3>
+    @for (follow of remoteFollowers; track follow) {
+      <div class="actor">
+        <my-actor-avatar [actor]="follow.follower" actorType="account" [href]="follow.follower.url" size="40"></my-actor-avatar>
+
+        <div class="actor-info">
+          <a [href]="follow.follower.url" class="actor-names" rel="noopener noreferrer" target="_blank" i18n-title title="Follower page">
+            <div class="actor-display-name">{{ follow.follower.name + '@' + follow.follower.host }}</div>
+            <my-global-icon iconName="external-link"></my-global-icon>
+          </a>
+
+          <div class="small muted">
+            @if (isFollowingAccount(follow)) {
+              <ng-container i18n>Is following all your channels</ng-container>
+            } @else {
+              <ng-container i18n>Is following your channel {{ follow.following.name }}</ng-container>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+
 </div>

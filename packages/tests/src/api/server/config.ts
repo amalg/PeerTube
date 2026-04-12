@@ -144,6 +144,8 @@ function checkInitialConfig (server: PeerTubeServer, data: CustomConfig) {
   expect(data.broadcastMessage.message).to.equal('')
   expect(data.broadcastMessage.dismissable).to.be.false
 
+  expect(data.search.extendedSearch.enabled).to.be.false
+
   expect(data.storyboards.enabled).to.be.true
 
   expect(data.export.users.enabled).to.be.true
@@ -432,6 +434,9 @@ function buildNewCustomConfig (server: PeerTubeServer): CustomConfig {
         url: 'https://search.joinpeertube.org',
         disableLocalSearch: true,
         isDefaultSearch: true
+      },
+      extendedSearch: {
+        enabled: true
       }
     },
     storyboards: {

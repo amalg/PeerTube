@@ -1138,6 +1138,10 @@ search:
     # If you did not disable local search in the client, you can decide to use the search index by default
     is_default_search: false
 
+  # Also search in video/playlist descriptions, not just titles
+  extended_search:
+    enabled: false
+
 # PeerTube client/interface configuration
 client:
   # Display modals to inform users of new features after a PeerTube update

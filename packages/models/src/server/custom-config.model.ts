@@ -332,6 +332,10 @@ export interface CustomConfig {
       disableLocalSearch: boolean
       isDefaultSearch: boolean
     }
+
+    extendedSearch: {
+      enabled: boolean
+    }
   }
 
   storyboards: {

@@ -178,6 +178,10 @@ export interface ServerConfig {
       disableLocalSearch: boolean
       isDefaultSearch: boolean
     }
+
+    extendedSearch: {
+      enabled: boolean
+    }
   }
 
   plugin: {

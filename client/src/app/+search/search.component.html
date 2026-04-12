@@ -89,10 +89,30 @@
     }
     @if (isPlaylist(result)) {
       <div class="entry video-playlist">
-        <my-video-playlist-miniature
-          [playlist]="result" displayAsRow="true" displayChannel="true" toManage="false"
-          [linkType]="getLinkType()"
-        ></my-video-playlist-miniature>
+        <a [routerLink]="getPlaylistUrl(result)">
+          <img
+            [src]="result.getThumbnailUrl(120)"
+            [alt]="result.displayName"
+            class="playlist-thumbnail"
+          />
+        </a>
+
+        <div class="video-channel-info">
+          <a [routerLink]="getPlaylistUrl(result)" class="video-channel-names">
+            <div class="video-channel-display-name me-2">{{ result.displayName }}</div>
+            @if (result.videoChannelBy) {
+              <div class="video-channel-name">{{ result.videoChannelBy }}</div>
+            }
+          </a>
+
+          <div class="small muted" i18n>{{ result.videosLength }} videos</div>
+        </div>
+
+        @if (!hideActions()) {
+          <a [routerLink]="getPlaylistUrl(result)" class="peertube-button primary-button">
+            <ng-container i18n>Play Videos</ng-container>
+          </a>
+        }
       </div>
     }
   }

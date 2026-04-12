@@ -20,7 +20,6 @@ import { InfiniteScrollerDirective } from '../shared/shared-main/common/infinite
 import { NumberFormatterPipe } from '../shared/shared-main/common/number-formatter.pipe'
 import { SubscribeButtonComponent } from '../shared/shared-user-subscription/subscribe-button.component'
 import { MiniatureDisplayOptions, VideoMiniatureComponent } from '../shared/shared-video-miniature/video-miniature.component'
-import { VideoPlaylistMiniatureComponent } from '../shared/shared-video-playlist/video-playlist-miniature.component'
 import { SearchFiltersComponent } from './search-filters.component'
 
 @Component({
@@ -36,7 +35,6 @@ import { SearchFiltersComponent } from './search-filters.component'
     NgTemplateOutlet,
     SubscribeButtonComponent,
     VideoMiniatureComponent,
-    VideoPlaylistMiniatureComponent,
     NumberFormatterPipe,
     AlertComponent,
     GlobalIconComponent
@@ -375,6 +373,10 @@ export class SearchComponent implements OnInit, OnDestroy {
   private buildPlaylistsPerPage () {
     if (this.advancedSearch.resultType === 'playlists') return 10
 
-    return 2
+    return 10
+  }
+
+  getPlaylistUrl (playlist: VideoPlaylist) {
+    return VideoPlaylist.buildWatchUrl(playlist)
   }
 }

@@ -58,6 +58,15 @@
   }
 }
 
+.video-playlist {
+  .playlist-thumbnail {
+    width: min(120px, $video-thumbnail-width);
+    height: auto;
+    border-radius: 4px;
+    @include margin-right(1rem);
+  }
+}
+
 .video-channel-info {
   flex-grow: 1;
   width: fit-content;

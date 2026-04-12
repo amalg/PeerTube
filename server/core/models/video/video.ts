@@ -1155,6 +1155,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
     countVideos?: boolean // default true
 
     search?: string
+    extendedSearch?: boolean
 
     excludeAlreadyWatched?: boolean // default false
 
@@ -1202,6 +1203,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
         'hasHLSFiles',
         'hasWebVideoFiles',
         'search',
+        'extendedSearch',
         'excludeAlreadyWatched'
       ]),
 
@@ -1243,6 +1245,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
     hasHLSFiles?: boolean
 
     search?: string
+    extendedSearch?: boolean
 
     host?: string
     startDate?: string // ISO 8601
@@ -1296,6 +1299,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
         'hasWebVideoFiles',
         'uuids',
         'search',
+        'extendedSearch',
         'displayOnlyForFollower',
         'excludeAlreadyWatched'
       ]),

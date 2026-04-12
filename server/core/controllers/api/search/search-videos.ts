@@ -115,6 +115,8 @@ async function searchVideosDB (query: VideosSearchQueryAfterSanitize, req: expre
         orLocalVideos: true
       },
 
+      extendedSearch: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED,
+
       countVideos: getCountVideos(req),
 
       user: res.locals.oauth

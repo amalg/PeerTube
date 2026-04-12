@@ -95,6 +95,7 @@ export type BuildVideosListQueryOptions = {
   durationMax?: number // seconds
 
   search?: string
+  extendedSearch?: boolean
 
   isCount?: boolean
 
@@ -784,8 +785,9 @@ export class VideosIdListQueryBuilder extends AbstractRunQuery {
   private whereSearch (options: {
     isCount?: boolean
     search?: string
+    extendedSearch?: boolean
   }) {
-    const { search, isCount } = options
+    const { search, isCount, extendedSearch } = options
 
     if (!search) {
       if (!isCount) this.attributes.push('0 as similarity')
@@ -798,15 +800,32 @@ export class VideosIdListQueryBuilder extends AbstractRunQuery {
 
     this.queryConfig = 'SET pg_trgm.word_similarity_threshold = 0.40;'
 
-    this.cte.push(
-      '"trigramSearch" AS (' +
-        '  SELECT "video"."id", ' +
-        `  word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("video"."name"))) as similarity ` +
-        '  FROM "video" ' +
-        '  WHERE lower(immutable_unaccent(' + escapedSearch + ')) <% lower(immutable_unaccent("video"."name")) OR ' +
-        '        lower(immutable_unaccent("video"."name")) LIKE lower(immutable_unaccent(' + escapedLikeSearch + '))' +
-        ')'
-    )
+    if (extendedSearch) {
+      this.cte.push(
+        '"trigramSearch" AS (' +
+          '  SELECT "video"."id", ' +
+          '  GREATEST(' +
+          `    word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("video"."name"))), ` +
+          `    word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent(COALESCE("video"."description", \'\')))) * 0.5 ` +
+          '  ) as similarity ' +
+          '  FROM "video" ' +
+          '  WHERE lower(immutable_unaccent(' + escapedSearch + ')) <% lower(immutable_unaccent("video"."name")) OR ' +
+          '        lower(immutable_unaccent("video"."name")) LIKE lower(immutable_unaccent(' + escapedLikeSearch + ')) OR ' +
+          '        lower(immutable_unaccent(' + escapedSearch + ')) <% lower(immutable_unaccent(COALESCE("video"."description", \'\'))) OR ' +
+          '        lower(immutable_unaccent(COALESCE("video"."description", \'\'))) LIKE lower(immutable_unaccent(' + escapedLikeSearch + '))' +
+          ')'
+      )
+    } else {
+      this.cte.push(
+        '"trigramSearch" AS (' +
+          '  SELECT "video"."id", ' +
+          `  word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("video"."name"))) as similarity ` +
+          '  FROM "video" ' +
+          '  WHERE lower(immutable_unaccent(' + escapedSearch + ')) <% lower(immutable_unaccent("video"."name")) OR ' +
+          '        lower(immutable_unaccent("video"."name")) LIKE lower(immutable_unaccent(' + escapedLikeSearch + '))' +
+          ')'
+      )
+    }
 
     this.joins.push('LEFT JOIN "trigramSearch" ON "video"."id" = "trigramSearch"."id"')
 

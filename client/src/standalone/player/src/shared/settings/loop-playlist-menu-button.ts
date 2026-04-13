@@ -14,7 +14,7 @@ const MenuButton = videojs.getComponent('MenuButton') as typeof VideojsMenuButto
 const MenuItem = videojs.getComponent('MenuItem') as typeof VideojsMenuItem
 
 interface LoopPlaylistMenuButtonOptions extends VideojsMenuButtonOptions {
-  controller?: PlaylistLoopController
+  controller: PlaylistLoopController
 }
 
 interface LoopPlaylistMenuItemOptions extends VideojsMenuItemOptions {

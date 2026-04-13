@@ -909,6 +909,17 @@ export class VideoWatchComponent implements OnInit, OnDestroy {
         displayControlBarButton: this.hasNextVideo()
       },
 
+      playlistLoopController: this.playlist
+        ? {
+          isEnabled: () => this.videoWatchPlaylist().getLoopPlaylist(),
+          toggle: () => this.zone.run(() => this.videoWatchPlaylist().switchLoopPlaylist()),
+          onChange: (listener) => {
+            const sub = this.videoWatchPlaylist().loopPlaylistChange$.subscribe(listener)
+            return () => sub.unsubscribe()
+          }
+        }
+        : undefined,
+
       upnext: {
         isEnabled: () => {
           if (this.playlist) return loggedInOrAnonymousUser?.autoPlayNextVideoPlaylist

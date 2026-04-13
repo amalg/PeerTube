@@ -450,7 +450,9 @@ export class PeerTubePlayer {
       p2pEnabled: () => this.currentLoadOptions.p2pEnabled,
 
       nextVideo: () => this.currentLoadOptions.nextVideo,
-      previousVideo: () => this.currentLoadOptions.previousVideo
+      previousVideo: () => this.currentLoadOptions.previousVideo,
+
+      playlistLoopController: () => this.currentLoadOptions.playlistLoopController
     })
 
     const videojsOptions = {

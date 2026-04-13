@@ -1,6 +1,8 @@
 FROM node:20-trixie-slim
 
 ARG ALREADY_BUILT=0
+ARG PEERTUBE_UID=999
+ARG PEERTUBE_GID=999
 
 # Install dependencies
 RUN apt update \
@@ -19,12 +21,13 @@ RUN npm install -g pnpm
 ENV DEFAULT_PEERTUBE_UID=999
 ENV DEFAULT_PEERTUBE_GID=999
 
-# Add peertube user
-RUN groupadd -r -g ${PEERTUBE_GID:-${DEFAULT_PEERTUBE_GID}} peertube \
-    && useradd -r -u ${PEERTUBE_UID:-${DEFAULT_PEERTUBE_UID}} -g peertube -m peertube
+# Add peertube user with specified UID/GID
+# If GID already exists (e.g. 100=users), use it; otherwise create peertube group
+RUN (getent group ${PEERTUBE_GID:-${DEFAULT_PEERTUBE_GID}} || groupadd -r -g ${PEERTUBE_GID:-${DEFAULT_PEERTUBE_GID}} peertube) \
+    && useradd -r -u ${PEERTUBE_UID:-${DEFAULT_PEERTUBE_UID}} -g ${PEERTUBE_GID:-${DEFAULT_PEERTUBE_GID}} -m peertube
 
 # Install PeerTube
-COPY --chown=peertube:peertube . /app
+COPY --chown=${PEERTUBE_UID:-999}:${PEERTUBE_GID:-999} . /app
 WORKDIR /app
 
 USER peertube
@@ -43,7 +46,7 @@ RUN if [ "${ALREADY_BUILT}" = 0 ]; then \
 USER root
 
 RUN mkdir /data /config
-RUN chown -R peertube:peertube /data /config
+RUN chown -R peertube /data /config
 
 ENV NODE_ENV production
 ENV NODE_CONFIG_DIR /app/config:/app/support/docker/production/config:/config

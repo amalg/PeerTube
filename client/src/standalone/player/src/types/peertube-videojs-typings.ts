@@ -160,6 +160,12 @@ export type PlaylistPluginOptions = {
   onItemClicked: (element: VideoPlaylistElement) => void
 }
 
+export type PlaylistLoopController = {
+  isEnabled: () => boolean
+  toggle: () => void
+  onChange: (listener: (enabled: boolean) => void) => () => void // returns unsubscribe
+}
+
 export type UpNextPluginOptions = {
   timeout: number
 

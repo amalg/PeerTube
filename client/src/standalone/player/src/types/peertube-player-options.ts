@@ -1,7 +1,7 @@
 import { LiveVideoLatencyModeType, PlayerMode, PlayerTheme, Thumbnail, VideoChapter, VideoFile } from '@peertube/peertube-models'
 import { PluginsManager } from '@root-helpers/plugins-manager'
 import { PeerTubeDockPluginOptions } from '../shared/dock/peertube-dock-plugin'
-import { PlaylistPluginOptions, VideoJSCaption, VideojsPlayer, VideoJSStoryboard } from './peertube-videojs-typings'
+import { PlaylistLoopController, PlaylistPluginOptions, VideoJSCaption, VideojsPlayer, VideoJSStoryboard } from './peertube-videojs-typings'
 
 export type PeerTubePlayerConstructorOptions = {
   playerElement: () => HTMLVideoElement
@@ -116,6 +116,8 @@ export type PeerTubePlayerLoadOptions = {
   dock?: PeerTubeDockPluginOptions
 
   playlist?: PlaylistPluginOptions
+
+  playlistLoopController?: PlaylistLoopController
 
   p2pEnabled: boolean
 

@@ -13,8 +13,11 @@ const Menu = videojs.getComponent('Menu') as typeof VideojsMenu
 const MenuButton = videojs.getComponent('MenuButton') as typeof VideojsMenuButton
 const MenuItem = videojs.getComponent('MenuItem') as typeof VideojsMenuItem
 
+// controller is optional at the type level for compatibility with video.js's registerComponent,
+// which requires constructors assignable from generic ComponentOptions. At runtime, the controller
+// is always present because control-bar-options-builder only adds this entry when one exists.
 interface LoopPlaylistMenuButtonOptions extends VideojsMenuButtonOptions {
-  controller: PlaylistLoopController
+  controller?: PlaylistLoopController
 }
 
 interface LoopPlaylistMenuItemOptions extends VideojsMenuItemOptions {
@@ -63,6 +66,10 @@ class LoopPlaylistMenuButton extends MenuButton {
 
   constructor (player: VideojsPlayer, options?: LoopPlaylistMenuButtonOptions) {
     super(player, options)
+
+    if (!options?.controller) {
+      throw new Error('LoopPlaylistMenuButton requires a PlaylistLoopController')
+    }
 
     this.controller = options.controller
 

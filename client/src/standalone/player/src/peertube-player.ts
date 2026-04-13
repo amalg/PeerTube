@@ -33,6 +33,8 @@ import './shared/peertube/peertube-plugin'
 import { ControlBarOptionsBuilder, HLSOptionsBuilder, WebVideoOptionsBuilder } from './shared/player-options-builder'
 import './shared/playlist/playlist-plugin'
 import './shared/resolutions/peertube-resolutions-plugin'
+import './shared/settings/loop-playlist-menu-button'
+import './shared/settings/loop-video-menu-button'
 import './shared/settings/menu-focus-fixed'
 import './shared/settings/resolution-menu-button'
 import './shared/settings/resolution-menu-item'
@@ -535,14 +537,15 @@ export class PeerTubePlayer {
       const player = this.player
 
       const shortUUID = self.currentLoadOptions.videoShortUUID
-      const isLoopEnabled = player.options_.loop
+      const isLoopEnabled = player.loop()
 
       const items = [
         {
           icon: 'repeat',
           label: player.localize('Play in loop') + (isLoopEnabled ? '<span class="vjs-icon-tick-white"></span>' : ''),
           listener: function () {
-            player.options_.loop = !isLoopEnabled
+            player.loop(!player.loop())
+            player.trigger('loopchange')
           }
         },
         {

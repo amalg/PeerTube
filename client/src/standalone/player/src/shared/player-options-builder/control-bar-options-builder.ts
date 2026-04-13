@@ -3,6 +3,7 @@ import {
   PeerTubeLinkButtonOptions,
   PeerTubePlayerConstructorOptions,
   PeerTubePlayerLoadOptions,
+  PlaylistLoopController,
   TheaterButtonOptions
 } from '../../types'
 
@@ -14,6 +15,8 @@ type ControlBarOptionsBuilderConstructorOptions =
 
     previousVideo: () => PeerTubePlayerLoadOptions['previousVideo']
     nextVideo: () => PeerTubePlayerLoadOptions['nextVideo']
+
+    playlistLoopController: () => PlaylistLoopController | undefined
   }
 
 export class ControlBarOptionsBuilder {
@@ -58,13 +61,20 @@ export class ControlBarOptionsBuilder {
     settingEntries.push('playbackRateMenuButton')
     settingEntries.push('captionsButton')
     settingEntries.push('resolutionMenuButton')
+    settingEntries.push('loopVideoMenuButton')
+
+    const playlistLoopController = this.options.playlistLoopController()
+    if (playlistLoopController) {
+      settingEntries.push('loopPlaylistMenuButton')
+    }
 
     return {
       settingsButton: {
         setup: {
           maxHeightOffset: 60
         },
-        entries: settingEntries
+        entries: settingEntries,
+        controller: playlistLoopController
       }
     }
   }

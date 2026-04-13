@@ -1,5 +1,6 @@
 import { NgClass } from '@angular/common'
 import { Component, inject, input, output } from '@angular/core'
+import { Observable, Subject } from 'rxjs'
 import { Router } from '@angular/router'
 import {
   AuthService,
@@ -56,6 +57,9 @@ export class VideoWatchPlaylistComponent {
 
   loopPlaylist: boolean
   loopPlaylistSwitchText = ''
+
+  private readonly loopPlaylistChangeSubject = new Subject<boolean>()
+  readonly loopPlaylistChange$: Observable<boolean> = this.loopPlaylistChangeSubject.asObservable()
 
   noPlaylistVideos = false
   currentPlaylistPosition: number
@@ -268,6 +272,12 @@ export class VideoWatchPlaylistComponent {
       VideoWatchPlaylistComponent.SESSION_STORAGE_LOOP_PLAYLIST,
       this.loopPlaylist.toString()
     )
+
+    this.loopPlaylistChangeSubject.next(this.loopPlaylist)
+  }
+
+  getLoopPlaylist () {
+    return this.loopPlaylist
   }
 
   private setAutoPlayNextVideoPlaylistSwitchText () {

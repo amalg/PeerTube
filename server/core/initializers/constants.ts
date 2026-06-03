@@ -62,7 +62,7 @@ import { CONFIG, registerConfigChangedHandler } from './config.js'
 
 // ---------------------------------------------------------------------------
 
-export const LAST_MIGRATION_VERSION = 1025
+export const LAST_MIGRATION_VERSION = 1040
 
 // ---------------------------------------------------------------------------
 
@@ -191,9 +191,9 @@ export const ROUTE_CACHE_LIFETIME = {
 
 // Number of points we add/remove after a successful/bad request
 export const ACTOR_FOLLOW_SCORE = {
-  PENALTY: -10,
-  BONUS: 10,
-  BASE: 1000,
+  PENALTY: -1000,
+  BONUS: 1000,
+  BASE: 5000,
   MAX: 10000
 }
 
@@ -359,7 +359,7 @@ export const REQUEST_TIMEOUTS = {
 
 export const SCHEDULER_INTERVALS_MS = {
   RUNNER_JOB_WATCH_DOG: Math.min(CONFIG.REMOTE_RUNNERS.STALLED_JOBS.VOD, CONFIG.REMOTE_RUNNERS.STALLED_JOBS.LIVE),
-  ACTOR_FOLLOW_SCORES: 60000 * 60, // 1 hour
+  ACTOR_FOLLOW_SCORES: 60000 * 60 * 20, // 20 hours
   REMOVE_OLD_JOBS: 60000 * 60, // 1 hour
   UPDATE_VIDEOS: 60000, // 1 minute
   UPDATE_TOKEN_SESSION: 60000, // 1 minute
@@ -554,7 +554,7 @@ export const CONSTRAINTS_FIELDS = {
     WORD: { min: 1, max: 100 } // Length
   },
   VIDEO_VIEW: {
-    UA_INFO: { min: 1, max: 200 } // Length
+    UA_INFO: { min: 1, max: 500 } // Length
   }
 }
 
@@ -628,6 +628,7 @@ export const VIDEO_LICENCES: { [id in VideoLicenceType]: string } = {
 }
 
 export const VIDEO_LANGUAGES: { [id: string]: string } = {}
+export const VIDEO_TEXT_LANGUAGES: { [id: string]: string } = {}
 
 export const VIDEO_PRIVACIES: { [id in VideoPrivacyType]: string } = {
   [VideoPrivacy.PUBLIC]: 'Public',
@@ -791,6 +792,8 @@ export const MIMETYPES = {
       'audio/m4a': '.m4a',
       'audio/x-m4a': '.m4a',
       'audio/mp4': '.m4a',
+
+      'audio/x-m4b': '.m4b',
 
       'audio/vnd.dolby.dd-raw': '.ac3',
       'audio/ac3': '.ac3'
@@ -999,7 +1002,7 @@ export const OBJECT_STORAGE_PROXY_PATHS = {
 // Cache control
 export const STATIC_MAX_AGE = {
   SERVER: '2h',
-  LAZY_SERVER: '2d',
+  LAZY_SERVER: '1y',
   CLIENT: '30d'
 }
 
@@ -1278,14 +1281,11 @@ if (process.env.PRODUCTION_CONSTANTS !== 'true') {
   if (isTestOrDevInstance()) {
     PRIVATE_RSA_KEY_SIZE = 1024
 
-    ACTOR_FOLLOW_SCORE.BASE = 20
-
     REMOTE_SCHEME.HTTP = 'http'
     REMOTE_SCHEME.WS = 'ws'
 
     STATIC_MAX_AGE.SERVER = '0'
 
-    SCHEDULER_INTERVALS_MS.ACTOR_FOLLOW_SCORES = 1000
     SCHEDULER_INTERVALS_MS.REMOVE_OLD_JOBS = 10000
     SCHEDULER_INTERVALS_MS.REMOVE_OLD_HISTORY = 5000
     SCHEDULER_INTERVALS_MS.UPDATE_VIDEOS = 5000
@@ -1319,6 +1319,8 @@ if (process.env.PRODUCTION_CONSTANTS !== 'true') {
   }
 
   if (isTestInstance()) {
+    SCHEDULER_INTERVALS_MS.ACTOR_FOLLOW_SCORES = 1000
+
     ACTIVITY_PUB.COLLECTION_ITEMS_PER_PAGE = 2
     ACTIVITY_PUB.ACTOR_REFRESH_INTERVAL = 10 * 1000 // 10 seconds
     ACTIVITY_PUB.VIDEO_REFRESH_INTERVAL = 10 * 1000 // 10 seconds
@@ -1353,7 +1355,15 @@ registerConfigChangedHandler(() => {
 export async function loadLanguages () {
   if (Object.keys(VIDEO_LANGUAGES).length !== 0) return
 
-  Object.assign(VIDEO_LANGUAGES, await buildLanguages())
+  const { allLanguages, nonTextLanguages } = await buildLanguages()
+
+  Object.assign(VIDEO_LANGUAGES, allLanguages)
+
+  for (const [ code, name ] of Object.entries(allLanguages)) {
+    if (!nonTextLanguages[code]) {
+      VIDEO_TEXT_LANGUAGES[code] = name
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1377,7 +1387,7 @@ export async function buildLanguages () {
 
   const languages: { [id: string]: string } = {}
 
-  const additionalLanguages = {
+  const nonTextLanguages = {
     sgn: true, // Sign languages (macro language)
     ase: true, // American sign language
     asq: true, // Austrian sign language
@@ -1396,6 +1406,12 @@ export async function buildLanguages () {
     rsl: true, // Russian sign language
     fse: true, // Finnish sign language
 
+    zxx: true // No linguistic content (ISO-639-2),
+  }
+
+  const additionalLanguages = {
+    ...nonTextLanguages,
+
     kab: true, // Kabyle
     gcf: true, // Guadeloupean
 
@@ -1405,8 +1421,6 @@ export async function buildLanguages () {
     tlh: true, // Klingon
     jbo: true, // Lojban
     avk: true, // Kotava
-
-    zxx: true, // No linguistic content (ISO-639-2),
 
     gsw: true // Swiss German (ISO-639-3)
   }
@@ -1445,7 +1459,7 @@ export async function buildLanguages () {
   languages['rcf'] = 'Réunion Creole French'
   languages['gcr'] = 'Guianese Creole French'
 
-  return languages
+  return { allLanguages: languages, nonTextLanguages }
 }
 
 // ---------------------------------------------------------------------------

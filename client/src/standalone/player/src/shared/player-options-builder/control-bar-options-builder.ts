@@ -62,6 +62,7 @@ export class ControlBarOptionsBuilder {
     settingEntries.push('captionsButton')
     settingEntries.push('resolutionMenuButton')
     settingEntries.push('loopVideoMenuButton')
+    settingEntries.push('videoFilterMenuButton')
 
     const playlistLoopController = this.options.playlistLoopController()
     if (playlistLoopController) {

@@ -525,12 +525,12 @@ describe('Test plugin filter hooks', function () {
     })
 
     it('Should not allow a signup', async function () {
-      const res = await servers[0].registrations.register({
+      const body = await servers[0].registrations.register({
         username: 'jma 1',
         expectedStatus: HttpStatusCode.FORBIDDEN_403
       })
 
-      expect((res.body as PeerTubeProblemDocument).detail).to.equal('No jma 1')
+      expect((body as unknown as PeerTubeProblemDocument).detail).to.equal('No jma 1')
     })
   })
 
@@ -985,6 +985,16 @@ describe('Test plugin filter hooks', function () {
       const email = emails[preEmailCount]
 
       expect(email['subject']).to.contain('Custom subject')
+    })
+  })
+
+  describe('Notifications', function () {
+    it('Should run filter:notifier.notification.enabled.result', async function () {
+      await servers[0].videos.quickUpload({ name: 'notification hook video' })
+
+      await waitJobs(servers)
+
+      await servers[0].servers.waitUntilLog('Run hook filter:notifier.notification.enabled.result', 1, false)
     })
   })
 

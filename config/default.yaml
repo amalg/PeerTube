@@ -20,6 +20,7 @@ secrets:
 http_timeouts:
   request: '5 minutes'
 
+# Limit number of HTTP requests per IP
 rates_limit:
   api:
     # 50 attempts in 10 seconds
@@ -555,6 +556,15 @@ nsfw_flags_settings:
   # using NSFW flags (violent content, etc.) set by video authors
   enabled: true
 
+download:
+  # Max cumulative download speed in bytes/s for all download requests, set to null for unlimited
+  # Supports byte format ("500KB", etc.)
+  max_total_bytes_per_second: 5MB
+
+  # Max cumulative download speed in bytes/s for a specific IP, set to null for unlimited
+  # Supports byte format ("500KB", etc.)
+  max_bytes_per_ip_per_second: 2MB
+
 download_generate_video:
   # Max parallel downloads on your instance
   # Each download spawns an ffmpeg process
@@ -592,6 +602,10 @@ user:
     videos:
       # Enable or disable video history by default for new users
       enabled: true
+
+  # Disable local login and OAuth token usage for the built-in `root` user.
+  # If enabled, root cannot login and existing root OAuth access/refresh tokens are rejected.
+  disable_root_auth: false
 
   # Default value of maximum video bytes the user can upload
   # Does not take into account transcoded files or account export archives (that can include user uploaded files)
@@ -884,6 +898,15 @@ import:
       proxies:
 #        - "https://username:password@example.com:8888"
 
+      cookies:
+        # Enable this to pass cookies to yt-dlp. This can help when imports need a real browser session or when your server IP is limited
+        # Only enable this if you trust users allowed to trigger imports because PeerTube will import using the account from which these cookies were exported
+        # That account may be rate limited or temporarily blocked
+        # PeerTube expects a Netscape-format file at storage/tmp-persistent/youtube-cookies.txt
+        # See https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp for cookie export instructions
+        # See https://docs.joinpeertube.org/maintain/configuration#cookies-for-youtube-imports for PeerTube-specific setup
+        enabled: false
+
     # Magnet URI or torrent file (use classic TCP/UDP/WebSeed to download the file)
     torrent:
       # We recommend to only enable magnet URI/torrent import if you trust your users
@@ -1035,7 +1058,7 @@ instance:
   # To discourage researchers from testing your instance and disable security.txt integration, set this to an empty string
   securitytxt: |
     Contact: https://github.com/Chocobozzz/PeerTube/blob/develop/SECURITY.md
-    Expires: 2025-12-31T11:00:00.000Z
+    Expires: 2030-12-31T11:00:00.000Z
 
 services:
   # Cards configuration to format video in Twitter/X

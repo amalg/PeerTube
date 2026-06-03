@@ -237,7 +237,7 @@ export class VideoPlaylistListQueryBuilder extends AbstractListQuery {
   private buildThumbnailJoin () {
     if (this.builtThumbnailJoin) return
 
-    this.join += ' LEFT JOIN "thumbnail" "Thumbnail" ON "Thumbnail"."videoPlaylistId" = "VideoPlaylistModel"."id" '
+    this.join += ' LEFT JOIN "thumbnail" "Thumbnails" ON "Thumbnails"."videoPlaylistId" = "VideoPlaylistModel"."id" '
 
     this.builtThumbnailJoin = true
   }
@@ -256,7 +256,7 @@ export class VideoPlaylistListQueryBuilder extends AbstractListQuery {
 
       this.tableAttributes.getAccountAvatarAttributes(),
       this.tableAttributes.getChannelAvatarAttributes(),
-      this.tableAttributes.getThumbnailAttributes()
+      this.tableAttributes.getThumbnailsAttributes()
     ]
   }
 

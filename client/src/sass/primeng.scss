@@ -15,43 +15,6 @@ p-select.small {
 }
 
 // ---------------------------------------------------------------------------
-// Input chips
-// ---------------------------------------------------------------------------
-
-.p-chip:has(.p-chip-remove-icon) {
-  // TODO: remove when https://github.com/primefaces/primeng/pull/18344 is released
-  padding-inline-end: var(--p-chip-padding-x) !important;
-}
-
-.p-inputchips-input {
-  gap: 1rem !important;
-
-  input::placeholder {
-    font-size: pvar(--input-placeholder-font-size);
-  }
-}
-
-.p-inputchips-input:has(.p-inputchips-chip) {
-  padding-left: pvar(--input-x-padding) !important;
-  padding-right: pvar(--input-x-padding) !important;
-}
-
-.p-inputchips.p-input-wrapper {
-  width: 100%;
-}
-
-p-chips.small {
-  .p-inputchips-input {
-    padding-left: calc(#{pvar(--input-x-padding)} / 2) !important;
-    padding-right: calc(#{pvar(--input-x-padding)} / 2) !important;
-  }
-
-  .p-inputchips-input {
-    gap: 0.25rem !important;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Multi Select
 // ---------------------------------------------------------------------------
 
@@ -170,6 +133,7 @@ p-table {
   }
 
   th {
+    line-height: 24px; // same size as sort icon
     font-size: 14px;
     padding: 5px 0.25rem 5px 1rem !important;
 
@@ -177,6 +141,13 @@ p-table {
       .dropdown > my-button::after {
         display: none;
       }
+    }
+
+    .p-datatable-sort-icon {
+      width: auto;
+      height: auto;
+      position: relative;
+      top: 1px;
     }
 
     @include ellipsis;
@@ -190,17 +161,6 @@ p-table {
   th {
     // It's like min-height in tables
     min-height: 46px;
-  }
-
-  .p-sortable-column-icon {
-    display: inline-block;
-    position: relative;
-    top: -1px;
-    vertical-align: middle;
-
-    .tertiary-button:not(.active) {
-      color: pvar(--secondary-icon-color) !important;
-    }
   }
 
   .p-datatable-table-container {

@@ -1,4 +1,5 @@
 import { ActorFollow, type FollowState } from '@peertube/peertube-models'
+import { isTestInstance } from '@peertube/peertube-node-utils'
 import { isActivityPubUrlValid } from '@server/helpers/custom-validators/activitypub/misc.js'
 import { afterCommitIfTransaction } from '@server/helpers/database-utils.js'
 import { getServerActor } from '@server/models/application/application.js'
@@ -504,6 +505,47 @@ export class ActorFollowModel extends SequelizeModel<ActorFollowModel> {
     return difference(hosts, followedHosts)
   }
 
+  static listOutgoingStaleForResend (options: {
+    olderThan: Date
+    limit: number
+  }) {
+    const { olderThan, limit } = options
+
+    return ActorFollowModel.findAll<MActorFollowActors>({
+      logging: !isTestInstance(),
+      where: {
+        state: {
+          [Op.in]: [ 'pending', 'accepted' ]
+        },
+        updatedAt: {
+          [Op.lt]: olderThan
+        }
+      },
+      include: [
+        {
+          model: ActorModel.unscoped(),
+          required: true,
+          as: 'ActorFollower',
+          where: {
+            serverId: null
+          }
+        },
+        {
+          model: ActorModel.unscoped(),
+          required: true,
+          as: 'ActorFollowing',
+          where: {
+            serverId: {
+              [Op.ne]: null
+            }
+          }
+        }
+      ],
+      order: [ [ 'updatedAt', 'ASC' ] ],
+      limit
+    })
+  }
+
   // ---------------------------------------------------------------------------
 
   static listAcceptedFollowerUrlsForAP (actorIds: number[], t: Transaction, start?: number, count?: number) {
@@ -616,14 +658,19 @@ export class ActorFollowModel extends SequelizeModel<ActorFollowModel> {
   }
 
   static updateScore (inboxUrl: string, value: number, t?: Transaction) {
-    const query = `UPDATE "actorFollow" SET "score" = LEAST("score" + ${value}, ${ACTOR_FOLLOW_SCORE.MAX}) ` +
+    const query = 'UPDATE "actorFollow" SET "score" = LEAST("score" + $value, $maxScore) ' +
       'WHERE id IN (' +
       'SELECT "actorFollow"."id" FROM "actorFollow" ' +
       'INNER JOIN "actor" ON "actor"."id" = "actorFollow"."actorId" ' +
-      `WHERE "actor"."inboxUrl" = '${inboxUrl}' OR "actor"."sharedInboxUrl" = '${inboxUrl}'` +
+      'WHERE "actor"."inboxUrl" = $inboxUrl OR "actor"."sharedInboxUrl" = $inboxUrl' +
       ')'
 
     const options = {
+      bind: {
+        inboxUrl,
+        maxScore: ACTOR_FOLLOW_SCORE.MAX,
+        value
+      },
       type: QueryTypes.BULKUPDATE,
       transaction: t
     }
@@ -661,12 +708,16 @@ export class ActorFollowModel extends SequelizeModel<ActorFollowModel> {
     start?: number
     count?: number
 
-    columnUrl?: string // Default 'url'
+    columnUrl?: 'url' | 'sharedInboxUrl' // Default 'url'
     distinct?: boolean // Default false
 
     selectTotal?: boolean // Default true
   }) {
     const { type, actorIds, t, start, count, columnUrl = 'url', distinct = false, selectTotal = true } = options
+
+    if (new Set([ 'url', 'sharedInboxUrl' ]).has(columnUrl) === false) {
+      throw new Error('Invalid columnUrl')
+    }
 
     let firstJoin: string
     let secondJoin: string

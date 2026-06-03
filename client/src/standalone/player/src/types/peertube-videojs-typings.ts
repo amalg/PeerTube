@@ -39,6 +39,7 @@ import { StatsCardOptions } from '../shared/stats/stats-card'
 import { StatsForNerdsPlugin } from '../shared/stats/stats-plugin'
 import { UpNextPlugin } from '../shared/upnext/upnext-plugin'
 import { WebVideoPlugin } from '../shared/web-video/web-video-plugin'
+import { VideoFlipHorizontallyPlugin } from '../shared/video-filter/video-flip-horizontally-plugin'
 
 declare module 'video.js' {
   export interface VideoJsPlayer {
@@ -206,7 +207,14 @@ export type HLSLoaderClass = {
 
   getEngine(): HlsJsP2PEngine
 }
-export type HLSPluginOptions = Partial<HlsConfig & { cueHandler: any, p2pMediaLoaderOptions: CoreConfig, liveDvrEnabled?: boolean }>
+export type HLSPluginOptions = Partial<
+  HlsConfig & {
+    cueHandler: any
+    p2pMediaLoaderOptions: CoreConfig
+    liveDvrEnabled?: boolean
+    durationPlaceholder?: number
+  }
+>
 
 export type P2PMediaLoaderPluginOptions = {
   redundancyUrlManager: RedundancyUrlManager | null
@@ -362,6 +370,8 @@ export type VideojsPlayer = ReturnType<typeof videojs.getPlayer> & {
   upnext(options?: UpNextPluginOptions): UpNextPlugin
 
   playlist(options?: PlaylistPluginOptions): PlaylistPlugin
+
+  videoFlipHorizontallyPlugin(): VideoFlipHorizontallyPlugin
 
   // ---------------------------------------------------------------------------
 

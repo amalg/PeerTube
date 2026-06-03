@@ -187,7 +187,11 @@ class MuxingSession extends EventEmitter implements MuxingSession {
 
     await this.transcodingWrapper.run()
 
-    this.filesWatcher = watch(this.outDirectory, { depth: 0 })
+    this.filesWatcher = watch(this.outDirectory, {
+      // Ignore 'segments-sha256.json' and 'segments-sha256.json.tmp' files that are frequently updated and not useful
+      ignored: path => path.endsWith('.json') || path.endsWith('json.tmp'),
+      depth: 0
+    })
 
     this.watchMasterFile()
     this.watchTSFiles()
@@ -234,7 +238,12 @@ class MuxingSession extends EventEmitter implements MuxingSession {
           )
         }
 
-        this.streamingPlaylist.assignP2PMediaLoaderInfoHashes(this.videoLive.Video, this.allResolutions.map(r => ({ height: r })))
+        const hlsStreams = [ ...this.allResolutions ]
+        if (this.hasAudio && this.hasVideo && !hlsStreams.includes(VideoResolution.H_NOVIDEO)) {
+          hlsStreams.push(VideoResolution.H_NOVIDEO)
+        }
+
+        this.streamingPlaylist.assignP2PMediaLoaderInfoHashes(this.videoLive.Video, Array.from(hlsStreams).map(r => ({ height: r })))
 
         await this.streamingPlaylist.save()
       } catch (err) {

@@ -54,7 +54,8 @@ export type TableQueryParams = {
   sortField?: string
   search?: string
 
-  state?: number
+  // Internal table state to fire reload
+  _state?: number
 }
 
 export type TableColumnInfo<ColumnName> = {
@@ -171,6 +172,7 @@ export class TableComponent<
   readonly rowReorder = output<TableRowReorderEvent>()
   readonly filtersChange = output<Partial<DataLoaderOptions>>()
   readonly searchChange = output<string>()
+  readonly dataLoaded = output<Data[]>()
 
   selectedRows: Data[] = []
   expandedRows = {}
@@ -488,9 +490,9 @@ export class TableComponent<
     }
 
     if (reset) {
-      const baseState = this.route.snapshot.queryParams.state || 0
+      const baseState = this.route.snapshot.queryParams._state || 0
 
-      newParams.state = +baseState + 1
+      newParams._state = +baseState + 1
     }
 
     debugLogger('Update URL', { newParams })
@@ -545,6 +547,8 @@ export class TableComponent<
             this.data = resultList.data
             this.totalRecords = resultList.total
             this.loaded = true
+
+            this.dataLoaded.emit(resultList.data)
 
             res()
           },

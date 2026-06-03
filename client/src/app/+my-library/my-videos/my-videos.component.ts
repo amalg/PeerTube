@@ -1,6 +1,6 @@
 import { Component, inject, OnDestroy, OnInit, viewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
-import { RouterLink } from '@angular/router'
+import { ActivatedRoute, RouterLink } from '@angular/router'
 import { AuthService, AuthUser, ConfirmService, Notifier, RestPagination, ServerService } from '@app/core'
 import { HeaderService } from '@app/header/header.service'
 import { formatICU } from '@app/helpers'
@@ -78,6 +78,7 @@ export class MyVideosComponent implements OnInit, OnDestroy {
   private server = inject(ServerService)
   private headerService = inject(HeaderService)
   private badgeService = inject(PeerTubeBadgeService)
+  private route = inject(ActivatedRoute)
 
   readonly table = viewChild<TableComponent<Video, DataLoaderParameter, ColumnName, QueryParams>>('table')
 
@@ -93,7 +94,8 @@ export class MyVideosComponent implements OnInit, OnDestroy {
     delete: true,
     report: false,
     duplicate: false,
-    mute: false,
+    muteByUser: false,
+    muteByServer: false,
     liveInfo: true,
     removeFiles: false,
     transcoding: false
@@ -171,6 +173,8 @@ export class MyVideosComponent implements OnInit, OnDestroy {
         title: $localize`One of these tags`
       }
     ]
+
+    this._customParseQueryParams(this.route.snapshot.queryParams)
 
     this.buildActions()
   }

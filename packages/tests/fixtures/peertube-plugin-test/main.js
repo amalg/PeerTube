@@ -344,9 +344,9 @@ async function register ({ registerHook, registerSetting, settingsManager, stora
 
   registerHook({
     target: 'filter:api.user.signup.requires-approval.result',
-    handler: ({ requiresApproval, registrationReason }, { body, headers }) => {
+    handler: ({ requiresApproval, registrationReason }, { body, headers, ip }) => {
       return {
-        requiresApproval: body.username === 'waiting_john',
+        requiresApproval: ip !== undefined && body.username === 'waiting_john',
         registrationReason: 'Marked as spam'
       }
     }
@@ -532,6 +532,8 @@ async function register ({ registerHook, registerSetting, settingsManager, stora
 
       'filter:api.overviews.videos.list.params',
       'filter:api.overviews.videos.list.result',
+
+      'filter:notifier.notification.enabled.result',
 
       'filter:job-queue.process.params',
       'filter:job-queue.process.result'

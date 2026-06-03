@@ -6,6 +6,7 @@ import { readdir } from 'fs/promises'
 import { dirname, join } from 'path'
 import { inspect } from 'util'
 import { isVideoFileExtnameValid } from '../custom-validators/videos.js'
+import { isResolvingToUnicastOnly } from '../dns.js'
 import { t } from '../i18n.js'
 import { logger, loggerTagsFactory } from '../logger.js'
 import { generateVideoImportTmpPath } from '../utils.js'
@@ -18,7 +19,8 @@ export const YoutubeDlImportErrorCode = {
   FETCH_ERROR: 0,
   NOT_ONLY_UNICAST_URL: 1,
   SKIP_PUBLICATION_DATE: 2,
-  IS_LIVE: 3
+  IS_LIVE: 3,
+  AGE_RESTRICTION: 4
 }
 
 export type YoutubeDlImportErrorCodeType = typeof YoutubeDlImportErrorCode[keyof typeof YoutubeDlImportErrorCode]
@@ -48,21 +50,25 @@ export class YoutubeDlImportError extends Error {
   isUnavailableVideoError () {
     const stderr = this.getStderr()
 
-    if (stderr.includes('Video unavailable') || stderr.includes(' 429 ')) {
-      return true
-    }
+    return stderr.includes('Video unavailable') || stderr.includes(' 429 ')
+  }
 
-    return false
+  isAgeLimitError () {
+    const stderr = this.getStderr()
+
+    return stderr.includes('Sign in to confirm your age')
+  }
+
+  isRemovedVideoError () {
+    const stderr = this.getStderr()
+
+    return stderr.includes('This video has been removed')
   }
 
   isRateLimitError () {
     const stderr = this.getStderr()
 
-    if (stderr.includes('Sign in to confirm you’re not a bot')) {
-      return true
-    }
-
-    return false
+    return stderr.includes('Sign in to confirm you’re not a bot')
   }
 
   private getStderr () {
@@ -97,6 +103,8 @@ export class YoutubeDLWrapper {
     youtubeDLArgs?: string[]
   }): Promise<YoutubeDLInfo> {
     const { userLanguage, youtubeDLArgs = [] } = options
+
+    await this.checkUnicastOrThrow(userLanguage)
 
     const youtubeDL = await YoutubeDLCLI.safeGet()
 
@@ -140,6 +148,8 @@ export class YoutubeDLWrapper {
   }) {
     const { userLanguage } = options
 
+    await this.checkUnicastOrThrow(userLanguage)
+
     const youtubeDL = await YoutubeDLCLI.safeGet()
 
     const list = await youtubeDL.getListInfo({
@@ -160,7 +170,11 @@ export class YoutubeDLWrapper {
     return list.map(info => info.webpage_url)
   }
 
-  async getSubtitles (): Promise<YoutubeDLSubs> {
+  async getSubtitles (options: { userLanguage: string }): Promise<YoutubeDLSubs> {
+    const { userLanguage } = options
+
+    await this.checkUnicastOrThrow(userLanguage)
+
     const cwd = CONFIG.STORAGE.TMP_DIR
 
     const youtubeDL = await YoutubeDLCLI.safeGet()
@@ -187,7 +201,15 @@ export class YoutubeDLWrapper {
     return subtitles
   }
 
-  async downloadVideo (fileExt: string, timeout: number): Promise<string> {
+  async downloadVideo (options: {
+    fileExt: string
+    timeout: number
+    userLanguage: string
+  }): Promise<string> {
+    const { fileExt, timeout, userLanguage } = options
+
+    await this.checkUnicastOrThrow(userLanguage)
+
     // Leave empty the extension, youtube-dl will add it
     const pathWithoutExtension = generateVideoImportTmpPath(this.url, '')
 
@@ -244,5 +266,16 @@ export class YoutubeDLWrapper {
     }
 
     return undefined
+  }
+
+  private async checkUnicastOrThrow (userLanguage: string) {
+    const host = new URL(this.url).hostname
+
+    if (!await isResolvingToUnicastOnly(host)) {
+      throw new YoutubeDlImportError({
+        message: t(`URL {targetUrl} is not a unicast URL.`, userLanguage, { targetUrl: this.url }),
+        code: YoutubeDlImportErrorCode.NOT_ONLY_UNICAST_URL
+      })
+    }
   }
 }

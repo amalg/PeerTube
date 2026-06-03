@@ -448,6 +448,7 @@ export async function checkThumbnails (options: {
   server: PeerTubeServer
   video?: Video
   playlist?: VideoPlaylist
+  remotePlaylist?: boolean
   thumbnails: string[]
 }) {
   const { server, video, playlist } = options
@@ -474,30 +475,28 @@ export async function checkThumbnails (options: {
     aspectRatio: t.aspectRatio
   }))
 
-  if (video) {
+  if (options.remotePlaylist !== true) {
     expect(toCheck).to.deep.include.members([
-      { width: 1400, height: 1400, aspectRatio: '1:1' },
       { width: 280, height: 157, aspectRatio: '16:9' },
       { width: 850, height: 480, aspectRatio: '16:9' },
       { width: 1280, height: 720, aspectRatio: '16:9' },
-      { width: 1920, height: 1080, aspectRatio: '16:9' }
+      { width: 1920, height: 1080, aspectRatio: '16:9' },
+      { width: 1400, height: 1400, aspectRatio: '1:1' }
     ])
 
     expect(toCheck).to.have.lengthOf(5)
-  } else if (playlist) {
-    expect(toCheck).to.deep.include.members([
+  } else {
+    expect(toCheck).to.deep.equal([
       { width: 280, height: 157, aspectRatio: '16:9' }
     ])
-
-    expect(toCheck).to.have.lengthOf(1)
   }
 
   for (const thumbnail of thumbnails) {
-    const videoThumbnail = entity.thumbnails.find(t => t.width === thumbnail.width && t.height === thumbnail.height)
+    const entityThumbnail = entity.thumbnails.find(t => t.width === thumbnail.width && t.height === thumbnail.height)
 
-    expectStartWith(videoThumbnail.fileUrl, server.url)
+    expectStartWith(entityThumbnail.fileUrl, server.url)
 
-    await testImageGeneratedByFFmpeg({ name: thumbnail.filename, url: videoThumbnail.fileUrl })
+    await testImageGeneratedByFFmpeg({ name: thumbnail.filename, url: entityThumbnail.fileUrl })
   }
 
   // oxlint-disable-next-line @typescript-eslint/no-deprecated

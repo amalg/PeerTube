@@ -15,6 +15,8 @@ import { ActionDropdownComponent, DropdownAction } from '../shared-main/buttons/
 import { CollaboratorStateComponent } from '../shared-main/channel/collaborator-state.component'
 import { PTDatePipe } from '../shared-main/common/date.pipe'
 import { NumberFormatterPipe } from '../shared-main/common/number-formatter.pipe'
+import { AccountBlockBadgesComponent } from '../shared-moderation/account-block-badges.component'
+import { BlocklistService } from '../shared-moderation/blocklist.service'
 import { DataLoaderOptionsBase, TableColumnInfo, TableComponent } from '../shared-tables/table.component'
 
 type DataLoaderParameter = Parameters<VideoCommentListAdminOwnerComponent['_dataLoader']>[0]
@@ -38,7 +40,8 @@ type ColumnName =
     TableComponent,
     NumberFormatterPipe,
     GlobalIconComponent,
-    CollaboratorStateComponent
+    CollaboratorStateComponent,
+    AccountBlockBadgesComponent
   ]
 })
 export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
@@ -50,6 +53,7 @@ export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
   private bulkService = inject(BulkService)
   private hooks = inject(HooksService)
   private pluginService = inject(PluginService)
+  private blocklist = inject(BlocklistService)
 
   readonly key = input.required<string>()
   readonly mode = input.required<'user' | 'admin'>()
@@ -98,7 +102,15 @@ export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
     const { simpleActions, bulkActions } = buildDropdownSimpleAndBulkActions<VideoCommentForAdminOrUser>([
       [
         {
-          label: $localize`Delete this comment`,
+          label: $localize`Go to account page`,
+          linkBuilder: comment => [ comment.account.localUrl ],
+          isDisplayed: () => this.mode() === 'admin',
+          enableBulk: false
+        }
+      ],
+      [
+        {
+          label: comments => formatICU($localize`{count, plural, =1 {Delete comment} other {Delete comments}}`, { count: comments.length }),
           handler: comments => this.removeComments(comments),
           isDisplayed: () => this.mode() === 'user' || this.user.hasRight(UserRight.MANAGE_ANY_VIDEO_COMMENT),
           enableBulk: true
@@ -125,9 +137,80 @@ export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
       ],
       [
         {
-          label: $localize`Approve this comment`,
+          label: comments => {
+            return formatICU($localize`{count, plural, =1 {Approve comment} other {Approve comments}}`, { count: comments.length })
+          },
+
           handler: comments => this.approveComments(comments),
           isDisplayed: comment => this.mode() === 'user' && comment.heldForReview,
+          enableBulk: true
+        }
+      ],
+      [
+        {
+          label: comments => {
+            return formatICU(
+              $localize`{count, plural, =1 {Mute account} other {Mute accounts}}`,
+              { count: this.getUniqueAccounts(comments).length }
+            )
+          },
+
+          handler: comments => this.muteAccount(comments),
+          isDisplayed: comment => {
+            return this.mode() === 'admin' &&
+              comment.account &&
+              !comment.account.mutedByInstance &&
+              this.blocklist.canMuteAccountByInstance(this.user, comment.account)
+          },
+
+          enableBulk: true
+        },
+        {
+          label: comments => {
+            return formatICU(
+              $localize`{count, plural, =1 {Unmute account} other {Unmute accounts}}`,
+              { count: this.getUniqueAccounts(comments).length }
+            )
+          },
+          handler: comments => this.unmuteAccount(comments),
+          isDisplayed: comment => {
+            return this.mode() === 'admin' &&
+              comment.account &&
+              comment.account.mutedByInstance &&
+              this.blocklist.canMuteAccountByInstance(this.user, comment.account)
+          },
+          enableBulk: true
+        },
+        {
+          label: comments => {
+            return formatICU(
+              $localize`{count, plural, =1 {Mute platform} other {Mute platforms}}`,
+              { count: this.getUniqueHosts(comments).length }
+            )
+          },
+          handler: comments => this.muteServer(comments),
+          isDisplayed: comment => {
+            return this.mode() === 'admin' &&
+              comment.account &&
+              !comment.account.mutedServerByInstance &&
+              this.blocklist.canMutePlatformByInstance(this.user, comment.account)
+          },
+          enableBulk: true
+        },
+        {
+          label: comments => {
+            return formatICU(
+              $localize`{count, plural, =1 {Unmute platform} other {Unmute platforms}}`,
+              { count: this.getUniqueHosts(comments).length }
+            )
+          },
+          handler: comments => this.unmuteServer(comments),
+          isDisplayed: comment => {
+            return this.mode() === 'admin' &&
+              comment.account &&
+              comment.account.mutedServerByInstance &&
+              this.blocklist.canMutePlatformByInstance(this.user, comment.account)
+          },
           enableBulk: true
         }
       ]
@@ -159,6 +242,17 @@ export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
             { value: false, label: $localize`Remote` }
           ]
         },
+
+        {
+          type: 'title',
+          title: $localize`Moderation`
+        },
+        {
+          type: 'checkbox',
+          key: 'excludeMuted',
+          label: $localize`Exclude comments from muted accounts`
+        },
+
         {
           type: 'title',
           title: $localize`Commented video scope`
@@ -238,6 +332,27 @@ export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
       )
   }
 
+  onDataLoaded () {
+    if (this.mode() === 'admin') {
+      this.loadBlockStatus()
+    }
+  }
+
+  private loadBlockStatus () {
+    const comments = this.table().data
+
+    const accounts = this.getUniqueAccounts(comments)
+    const hosts = this.getUniqueHosts(comments)
+
+    this.blocklist.getStatus({ accounts: accounts.map(a => a.nameWithHostForced), hosts })
+      .subscribe(status => {
+        for (const a of accounts) {
+          a.mutedByInstance = status.accounts[a.nameWithHostForced].blockedByServer
+          a.mutedServerByInstance = status.hosts[a.host].blockedByServer
+        }
+      })
+  }
+
   private approveComments (comments: VideoCommentForAdminOrUser[]) {
     const commentArgs = comments.map(c => ({ videoId: c.video.id, commentId: c.id }))
 
@@ -306,5 +421,79 @@ export class VideoCommentListAdminOwnerComponent implements OnInit, OnDestroy {
 
         error: err => this.notifier.handleError(err)
       })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Block/unblock accounts and servers
+  // ---------------------------------------------------------------------------
+
+  private muteAccount (comments: VideoCommentForAdminOrUser[]) {
+    const accounts = this.getUniqueAccounts(comments)
+      .map(account => ({ nameWithHost: account.name + '@' + account.host }))
+
+    this.blocklist.blockAccountByInstanceAndNotify(accounts)
+      .subscribe({
+        next: () => {
+          this.loadBlockStatus()
+        },
+
+        error: err => this.notifier.handleError(err)
+      })
+  }
+
+  private unmuteAccount (comments: VideoCommentForAdminOrUser[]) {
+    const accounts = this.getUniqueAccounts(comments)
+      .map(account => ({ nameWithHost: account.name + '@' + account.host }))
+
+    this.blocklist.unblockAccountByInstanceAndNotify(accounts)
+      .subscribe({
+        next: () => {
+          this.loadBlockStatus()
+        },
+
+        error: err => this.notifier.handleError(err)
+      })
+  }
+
+  private muteServer (comments: VideoCommentForAdminOrUser[]) {
+    const hosts = this.getUniqueHosts(comments)
+
+    this.blocklist.blockServerByInstanceAndNotify(hosts)
+      .subscribe({
+        next: () => {
+          this.loadBlockStatus()
+        },
+
+        error: err => this.notifier.handleError(err)
+      })
+  }
+
+  private unmuteServer (comments: VideoCommentForAdminOrUser[]) {
+    const hosts = this.getUniqueHosts(comments)
+
+    this.blocklist.unblockServerByInstanceAndNotify(hosts)
+      .subscribe({
+        next: () => {
+          this.loadBlockStatus()
+        },
+
+        error: err => this.notifier.handleError(err)
+      })
+  }
+
+  private getUniqueAccounts (comments: VideoCommentForAdminOrUser[]) {
+    const accountsDone = new Set<number>()
+
+    return comments
+      .map(a => {
+        if (!a.account || accountsDone.has(a.account.id)) return null
+
+        accountsDone.add(a.account.id)
+        return a.account
+      }).filter(a => !!a)
+  }
+
+  private getUniqueHosts (comments: VideoCommentForAdminOrUser[]) {
+    return Array.from(new Set(comments.map(c => c.account?.host).filter(h => !!h)))
   }
 }

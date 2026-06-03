@@ -28,6 +28,9 @@ class WebVideoPlugin extends Plugin {
     this.videoFiles = options.videoFiles
     this.videoFileToken = options.videoFileToken
 
+    const videoEl = this.player.tech(true)?.el()
+    if (videoEl) videoEl.setAttribute('crossorigin', 'anonymous')
+
     const videoFile = this.pickInitialVideoFile()
     if (videoFile) this.updateVideoFile({ videoFile, isUserResolutionChange: false })
 
@@ -196,12 +199,15 @@ class WebVideoPlugin extends Plugin {
 
       if (!player) return
 
-      return player.trigger('network-info', {
-        source: 'web-video',
-        http: {
-          downloaded: player.bufferedPercent() * this.currentVideoFile?.size
-        }
-      } as PlayerNetworkInfo)
+      return player.trigger(
+        'network-info',
+        {
+          source: 'web-video',
+          http: {
+            downloaded: player.bufferedPercent() * this.currentVideoFile?.size
+          }
+        } satisfies PlayerNetworkInfo
+      )
     }, 1000)
   }
 }

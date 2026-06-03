@@ -90,8 +90,8 @@ export class Video implements VideoServerModel {
   blacklisted?: boolean
   blacklistedReason?: string
 
-  blockedOwner?: boolean
-  blockedServer?: boolean
+  blockedOwner?: never
+  blockedServer?: never
 
   account: {
     id: number
@@ -133,7 +133,7 @@ export class Video implements VideoServerModel {
     return buildVideoWatchPath({ shortUUID: video.shortUUID || video.uuid })
   }
 
-  static buildUpdateUrl (video: Partial<Pick<Video, 'uuid' | 'shortUUID'>>) {
+  static buildManageUrl (video: Partial<Pick<Video, 'uuid' | 'shortUUID'>>) {
     return '/videos/manage/' + (video.shortUUID || video.uuid)
   }
 
@@ -206,9 +206,6 @@ export class Video implements VideoServerModel {
 
     this.blacklisted = hash.blacklisted
     this.blacklistedReason = hash.blacklistedReason
-
-    this.blockedOwner = hash.blockedOwner
-    this.blockedServer = hash.blockedServer
 
     this.streamingPlaylists = hash.streamingPlaylists
     this.files = hash.files

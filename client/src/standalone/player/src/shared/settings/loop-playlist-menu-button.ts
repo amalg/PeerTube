@@ -61,8 +61,15 @@ class LoopPlaylistMenuItem extends MenuItem {
 
 class LoopPlaylistMenuButton extends MenuButton {
   declare labelEl_: HTMLElement
-  declare private readonly controller: PlaylistLoopController
   declare private unsubscribe: () => void
+
+  // video.js's MenuButton base constructor invokes update() -> createMenu()
+  // before the subclass assigns this.controller, so reading the own field there
+  // yields undefined. Resolve from options_, which video.js populates during the
+  // base Component constructor (before createMenu runs).
+  private get controller (): PlaylistLoopController {
+    return (this.options_ as Required<LoopPlaylistMenuButtonOptions>).controller
+  }
 
   constructor (player: VideojsPlayer, options?: LoopPlaylistMenuButtonOptions) {
     super(player, options)
@@ -70,8 +77,6 @@ class LoopPlaylistMenuButton extends MenuButton {
     if (!options?.controller) {
       throw new Error('LoopPlaylistMenuButton requires a PlaylistLoopController')
     }
-
-    this.controller = options.controller
 
     this.controlText('Loop playlist')
 

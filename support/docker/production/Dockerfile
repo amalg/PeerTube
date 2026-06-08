@@ -56,6 +56,7 @@ VOLUME /data
 VOLUME /config
 
 COPY ./support/docker/production/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY ./support/docker/production/patches/patch-nvenc-av1.js /usr/local/bin/patch-nvenc-av1.js
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 # Expose API, RTMP and RTMPS ports

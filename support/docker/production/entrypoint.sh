@@ -16,4 +16,10 @@ if [ "$1" = 'node' -a "$(id -u)" = '0' ]; then
     exec gosu peertube "$0" "$@"
 fi
 
+# Apply custom plugin patches (idempotent, non-fatal). Runs as the peertube
+# user so it can write to /data/plugins. See support/docker/production/patches/.
+if [ "$1" = 'node' ] && [ -f /usr/local/bin/patch-nvenc-av1.js ]; then
+    node /usr/local/bin/patch-nvenc-av1.js || true
+fi
+
 exec "$@"

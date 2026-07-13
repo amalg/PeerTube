@@ -1,5 +1,43 @@
 # Changelog
 
+## v8.2.2
+
+We strongly recommend all administrators upgrade immediately.
+
+### SECURITY
+
+This release addresses vulnerabilities ranging from medium to high severity affecting PeerTube **<= 8.2.1**. Security hardening is also included.
+In a few weeks, this changelog will be updated to disclose the vulnerabilities.
+
+### Bug fixes
+
+ * Accept short UUIDs for `loadByIdOrUUID` and `loadByIdOrUUIDWithFiles` plugin helpers
+ * Allow restricted embed to be displayed on the origin instance
+ * Fix invalid state error on failed move job
+ * Fix missing mutex lock when managing video captions
+ * Fix broken embed when the tab is loaded in the background on Firefox
+ * Fix menu collapse/extend icon on RTL layout
+
+
+## v8.2.1
+
+### SECURITY
+
+ * Fix XSS in JSON-LD object injected by the server in video watch page [GHSA-jxwq-h9xv-hr28](https://github.com/Chocobozzz/PeerTube/security/advisories/GHSA-jxwq-h9xv-hr28)
+
+### Features
+
+ * Add `toot:discoverable` support for actors
+
+### Bug fixes
+
+ * Handle PNPM store directory change, fixing `ERR_PNPM_UNEXPECTED_STORE` crash
+ * Better conversion to square thumbnail of landscape thumbnails
+ * Fix running again object storage move job on videos that are already in object storage when using `npm run create-move-video-storage-job`
+ * Fix uploading HLS caption after transcoding
+ * Fix broken schema.org tag with special chars
+
+
 ## v8.2.0
 
 ### SECURITY

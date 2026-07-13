@@ -145,6 +145,7 @@ function checkInitialConfig (server: PeerTubeServer, data: CustomConfig) {
   expect(data.broadcastMessage.dismissable).to.be.false
 
   expect(data.search.extendedSearch.enabled).to.be.false
+  expect(data.search.searchMethod).to.equal('default')
 
   expect(data.storyboards.enabled).to.be.true
 
@@ -437,7 +438,8 @@ function buildNewCustomConfig (server: PeerTubeServer): CustomConfig {
       },
       extendedSearch: {
         enabled: true
-      }
+      },
+      searchMethod: 'hard-split'
     },
     storyboards: {
       enabled: false,

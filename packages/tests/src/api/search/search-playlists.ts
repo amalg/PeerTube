@@ -211,6 +211,41 @@ describe('Test playlists search', function () {
     })
   })
 
+  describe('Hard split search', function () {
+    before(async function () {
+      this.timeout(60000)
+
+      const videoId = (await server.videos.upload()).uuid
+
+      const attributes = {
+        displayName: 'Hard split alpha playlist',
+        description: 'This description contains the bravo keyword',
+        privacy: VideoPlaylistPrivacy.PUBLIC,
+        videoChannelId: server.store.channel.id
+      }
+      const created = await server.playlists.create({ attributes })
+
+      await server.playlists.addElement({ playlistId: created.id, attributes: { videoId } })
+    })
+
+    it('Should only return playlists containing every term with hard split', async function () {
+      await server.config.updateExistingConfig({ newConfig: { search: { searchMethod: 'hard-split' } } })
+
+      const body = await command.searchPlaylists({ search: 'alpha bravo' })
+      expect(body.total).to.equal(1)
+      expect(body.data[0].displayName).to.equal('Hard split alpha playlist')
+    })
+
+    it('Should not return playlists when a term is not found anywhere', async function () {
+      const body = await command.searchPlaylists({ search: 'alpha charlie' })
+      expect(body.total).to.equal(0)
+    })
+
+    after(async function () {
+      await server.config.updateExistingConfig({ newConfig: { search: { searchMethod: 'default' } } })
+    })
+  })
+
   after(async function () {
     await cleanupTests([ server, remoteServer ])
   })

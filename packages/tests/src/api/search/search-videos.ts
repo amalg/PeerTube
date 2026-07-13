@@ -642,6 +642,63 @@ describe('Test videos search', function () {
     })
   })
 
+  describe('Hard split search', function () {
+    before(async function () {
+      this.timeout(60000)
+
+      await server.videos.upload({ attributes: { name: 'hard split alpha video', description: 'This description contains the bravo keyword' } })
+      await server.videos.upload({ attributes: { name: 'hard split bravo video', description: 'Nothing else in here' } })
+    })
+
+    it('Should return partial matches with the default search method', async function () {
+      await server.config.updateExistingConfig({
+        newConfig: {
+          search: {
+            searchMethod: 'default'
+          }
+        }
+      })
+
+      const body = await command.searchVideos({ search: 'alpha bravo' })
+      expect(body.total).to.be.greaterThan(1)
+    })
+
+    it('Should only return videos containing every term with hard split', async function () {
+      await server.config.updateExistingConfig({
+        newConfig: {
+          search: {
+            searchMethod: 'hard-split'
+          }
+        }
+      })
+
+      const body = await command.searchVideos({ search: 'alpha bravo' })
+      expect(body.total).to.equal(1)
+      expect(body.data[0].name).to.equal('hard split alpha video')
+    })
+
+    it('Should not return videos when a term is not found anywhere', async function () {
+      const body = await command.searchVideos({ search: 'alpha charlie' })
+      expect(body.total).to.equal(0)
+    })
+
+    it('Should match terms case insensitively', async function () {
+      const body = await command.searchVideos({ search: 'ALPHA BRAVO' })
+      expect(body.total).to.equal(1)
+      expect(body.data[0].name).to.equal('hard split alpha video')
+    })
+
+    after(async function () {
+      await server.config.updateExistingConfig({
+        newConfig: {
+          search: {
+            searchMethod: 'default'
+          }
+        }
+      })
+    })
+  })
+
   after(async function () {
     await cleanupTests([ server ])
   })

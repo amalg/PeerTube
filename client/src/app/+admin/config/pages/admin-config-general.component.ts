@@ -185,7 +185,7 @@ type Form = {
     extendedSearch: FormGroup<{
       enabled: FormControl<boolean>
     }>
-    searchMethod: FormControl<string>
+    searchMethod: FormControl<'default' | 'hard-split'>
   }>
 
   storyboards: FormGroup<{

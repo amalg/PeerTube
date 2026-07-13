@@ -38,8 +38,8 @@ RUN if [ "${ALREADY_BUILT}" = 0 ]; then \
     && npm run build; \
   else \
     echo "Do not build application inside Docker because of ALREADY_BUILT build argument"; \
-  fi; \
-  rm -rf ./node_modules ./client/node_modules ./client/.angular \
+  fi \
+  && rm -rf ./node_modules ./client/node_modules ./client/.angular \
   && npm run install-node-dependencies -- --production \
   && pnpm store prune
 

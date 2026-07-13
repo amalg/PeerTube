@@ -185,6 +185,7 @@ type Form = {
     extendedSearch: FormGroup<{
       enabled: FormControl<boolean>
     }>
+    searchMethod: FormControl<string>
   }>
 
   storyboards: FormGroup<{
@@ -439,7 +440,8 @@ export class AdminConfigGeneralComponent implements OnInit, OnDestroy, CanCompon
         },
         extendedSearch: {
           enabled: null
-        }
+        },
+        searchMethod: null
       },
       storyboards: {
         enabled: null,

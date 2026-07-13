@@ -788,6 +788,22 @@
         </div>
       </ng-container>
 
+      <div class="form-group">
+        <label i18n for="searchSearchMethod">Local search method</label>
+
+        <div i18n class="form-group-description">
+          "Default" uses fuzzy trigram matching against the whole search, so results matching only part of the query can be returned.
+          "Hard split" splits the search into words and only returns results where every word appears in the title or description.
+        </div>
+
+        <div class="peertube-select-container">
+          <select id="searchSearchMethod" formControlName="searchMethod" class="form-control">
+            <option i18n value="default">Default (fuzzy matching)</option>
+            <option i18n value="hard-split">Hard split (require all words)</option>
+          </select>
+        </div>
+      </div>
+
       <ng-container formGroupName="searchIndex">
         <div class="form-group">
           <my-peertube-checkbox inputName="searchIndexEnabled" formControlName="enabled" i18n-labelText labelText="Enable global search">

@@ -1165,6 +1165,13 @@ search:
   extended_search:
     enabled: false
 
+  # Local search matching method
+  # 'default': fuzzy trigram matching against the whole search string, so a result
+  #            matching only part of the query can still be returned
+  # 'hard-split': split the search into words and only return results where every
+  #               word appears in the title or description
+  search_method: 'default'
+
 # PeerTube client/interface configuration
 client:
   # Display modals to inform users of new features after a PeerTube update

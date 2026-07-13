@@ -182,6 +182,8 @@ export interface ServerConfig {
     extendedSearch: {
       enabled: boolean
     }
+
+    searchMethod: 'default' | 'hard-split'
   }
 
   plugin: {

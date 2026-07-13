@@ -336,6 +336,8 @@ export interface CustomConfig {
     extendedSearch: {
       enabled: boolean
     }
+
+    searchMethod: 'default' | 'hard-split'
   }
 
   storyboards: {

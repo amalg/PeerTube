@@ -143,6 +143,7 @@ export const customConfigUpdateValidator = [
   body('search.searchIndex.isDefaultSearch').isBoolean(),
 
   body('search.extendedSearch.enabled').isBoolean(),
+  body('search.searchMethod').isIn([ 'default', 'hard-split' ]),
 
   body('defaults.publish.commentsPolicy').custom(isVideoCommentsPolicyValid),
   body('defaults.publish.privacy').custom(isVideoPrivacyValid),

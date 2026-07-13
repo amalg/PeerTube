@@ -178,7 +178,8 @@ class ServerConfigManager {
         },
         extendedSearch: {
           enabled: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED
-        }
+        },
+        searchMethod: CONFIG.SEARCH.SEARCH_METHOD
       },
       plugin: {
         registered: this.getRegisteredPlugins(),

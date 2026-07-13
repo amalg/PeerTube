@@ -1199,6 +1199,9 @@ const CONFIG = {
       get ENABLED () {
         return config.get<boolean>('search.extended_search.enabled')
       }
+    },
+    get SEARCH_METHOD () {
+      return config.get<string>('search.search_method') as 'default' | 'hard-split'
     }
   },
   STORYBOARDS: {

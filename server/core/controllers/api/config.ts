@@ -574,7 +574,8 @@ function customConfig (): CustomConfig {
       },
       extendedSearch: {
         enabled: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED
-      }
+      },
+      searchMethod: CONFIG.SEARCH.SEARCH_METHOD
     },
     storyboards: {
       enabled: CONFIG.STORYBOARDS.ENABLED,

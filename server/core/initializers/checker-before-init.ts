@@ -232,6 +232,7 @@ export function checkMissedConfig () {
     'search.search_index.disable_local_search',
     'search.search_index.is_default_search',
     'search.extended_search.enabled',
+    'search.search_method',
     'live.enabled',
     'live.allow_replay',
     'live.latency_setting.enabled',

@@ -964,6 +964,7 @@ search:
     enabled:
       __name: PEERTUBE_SEARCH_EXTENDED_SEARCH_ENABLED
       __format: json
+  search_method: PEERTUBE_SEARCH_SEARCH_METHOD
 
 client:
   new_features_info:

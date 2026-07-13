@@ -96,6 +96,7 @@ export type BuildVideosListQueryOptions = {
 
   search?: string
   extendedSearch?: boolean
+  searchMethod?: 'default' | 'hard-split'
 
   isCount?: boolean
 
@@ -817,8 +818,9 @@ export class VideosIdListQueryBuilder extends AbstractRunQuery {
     isCount?: boolean
     search?: string
     extendedSearch?: boolean
+    searchMethod?: 'default' | 'hard-split'
   }) {
-    const { search, isCount, extendedSearch } = options
+    const { search, isCount, extendedSearch, searchMethod } = options
 
     if (!search) {
       if (!isCount) this.attributes.push('0 as similarity')
@@ -829,9 +831,35 @@ export class VideosIdListQueryBuilder extends AbstractRunQuery {
     const escapedSearch = this.sequelize.escape(search)
     const escapedLikeSearch = this.sequelize.escape('%' + search + '%')
 
+    // Hard split only applies when the search actually contains at least one word
+    const splitTerms = searchMethod === 'hard-split'
+      ? search.trim().split(/\s+/).filter(t => t.length !== 0)
+      : []
+
     this.queryConfig = 'SET pg_trgm.word_similarity_threshold = 0.40;'
 
-    if (extendedSearch) {
+    if (splitTerms.length !== 0) {
+      // Every term must appear in the name or the description
+      // Similarity is still computed against the whole search string for ranking
+      const termConditions = splitTerms.map(term => {
+        const escapedLikeTerm = this.sequelize.escape('%' + term + '%')
+
+        return '(lower(immutable_unaccent("video"."name")) LIKE lower(immutable_unaccent(' + escapedLikeTerm + ')) OR ' +
+          'lower(immutable_unaccent(COALESCE("video"."description", \'\'))) LIKE lower(immutable_unaccent(' + escapedLikeTerm + ')))'
+      }).join(' AND ')
+
+      this.cte.push(
+        '"trigramSearch" AS (' +
+          '  SELECT "video"."id", ' +
+          '  GREATEST(' +
+          `    word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("video"."name"))), ` +
+          `    word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent(COALESCE("video"."description", \'\')))) * 0.5 ` +
+          '  ) as similarity ' +
+          '  FROM "video" ' +
+          '  WHERE ' + termConditions +
+          ')'
+      )
+    } else if (extendedSearch) {
       this.cte.push(
         '"trigramSearch" AS (' +
           '  SELECT "video"."id", ' +

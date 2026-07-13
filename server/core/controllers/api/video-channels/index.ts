@@ -8,6 +8,7 @@ import {
   VideosImportInChannelCreate
 } from '@peertube/peertube-models'
 import { pickCommonVideoQuery } from '@server/helpers/query.js'
+import { CONFIG } from '@server/initializers/config.js'
 import { scheduleActorRefreshIfNeeded } from '@server/lib/activitypub/actors/refresh.js'
 import { Hooks } from '@server/lib/plugins/hooks.js'
 import { reorderPlaylistOrElementsPosition, sendPlaylistPositionUpdateOfChannel } from '@server/lib/video-playlist.js'
@@ -339,6 +340,7 @@ async function listVideoChannelPlaylists (req: express.Request, res: express.Res
     count,
     sort,
     search,
+    searchMethod: CONFIG.SEARCH.SEARCH_METHOD,
     type: playlistType
   })
 
@@ -407,6 +409,7 @@ async function listVideoChannelVideos (req: express.Request, res: express.Respon
     displayOnlyForFollower,
     videoChannelId: videoChannelInstance.id,
     user: res.locals.oauth ? res.locals.oauth.token.User : undefined,
+    searchMethod: CONFIG.SEARCH.SEARCH_METHOD,
     countVideos
   }, 'filter:api.video-channels.videos.list.params')
 

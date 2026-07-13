@@ -1154,6 +1154,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
         | 'hasWebVideoFiles'
         | 'search'
         | 'extendedSearch'
+        | 'searchMethod'
         | 'excludeAlreadyWatched'
         | 'hasRedundancy'
         | 'redundancyStrategy'
@@ -1203,6 +1204,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
         'hasWebVideoFiles',
         'search',
         'extendedSearch',
+        'searchMethod',
         'excludeAlreadyWatched',
         'redundancyStrategy',
         'hasRedundancy',
@@ -1250,6 +1252,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
 
     search?: string
     extendedSearch?: boolean
+    searchMethod?: 'default' | 'hard-split'
 
     host?: string
     startDate?: string // ISO 8601
@@ -1304,6 +1307,7 @@ export class VideoModel extends SequelizeModel<VideoModel> {
         'uuids',
         'search',
         'extendedSearch',
+        'searchMethod',
         'displayOnlyForFollower',
         'excludeAlreadyWatched'
       ]),

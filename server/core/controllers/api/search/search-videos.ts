@@ -116,6 +116,7 @@ async function searchVideosDB (query: VideosSearchQueryAfterSanitize, req: expre
       },
 
       extendedSearch: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED,
+      searchMethod: CONFIG.SEARCH.SEARCH_METHOD,
 
       countVideos: getCountVideos(req),
 

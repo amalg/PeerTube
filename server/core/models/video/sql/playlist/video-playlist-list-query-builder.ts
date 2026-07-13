@@ -16,6 +16,7 @@ export interface ListVideoPlaylistsOptions extends AbstractListQueryOptions {
   listMyPlaylists?: boolean
   search?: string
   extendedSearch?: boolean
+  searchMethod?: 'default' | 'hard-split'
   host?: string
   uuids?: string[]
   channelNameOneOf?: string[]
@@ -140,7 +141,30 @@ export class VideoPlaylistListQueryBuilder extends AbstractListQuery {
       const escapedSearch = this.sequelize.escape(this.options.search)
       const escapedLikeSearch = this.sequelize.escape('%' + this.options.search + '%')
 
-      if (this.options.extendedSearch) {
+      // Hard split only applies when the search actually contains at least one word
+      const splitTerms = this.options.searchMethod === 'hard-split'
+        ? this.options.search.trim().split(/\s+/).filter(t => t.length !== 0)
+        : []
+
+      if (splitTerms.length !== 0) {
+        // Every term must appear in the name or the description
+        // Similarity is still computed against the whole search string for ranking
+        const termConditions = splitTerms.map(term => {
+          const escapedLikeTerm = this.sequelize.escape('%' + term + '%')
+
+          return `(lower(immutable_unaccent("VideoPlaylistModel"."name")) LIKE lower(immutable_unaccent(${escapedLikeTerm})) OR ` +
+            `lower(immutable_unaccent(COALESCE("VideoPlaylistModel"."description", ''))) LIKE lower(immutable_unaccent(${escapedLikeTerm})))`
+        }).join(' AND ')
+
+        this.subQueryAttributes.push(
+          `GREATEST(` +
+            `word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("VideoPlaylistModel"."name"))), ` +
+            `COALESCE(word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent(COALESCE("VideoPlaylistModel"."description", '')))), 0) * 0.5` +
+          `) as similarity`
+        )
+
+        where.push(`(${termConditions})`)
+      } else if (this.options.extendedSearch) {
         this.subQueryAttributes.push(
           `GREATEST(` +
             `word_similarity(lower(immutable_unaccent(${escapedSearch})), lower(immutable_unaccent("VideoPlaylistModel"."name"))), ` +

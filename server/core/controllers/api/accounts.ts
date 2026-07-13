@@ -1,5 +1,6 @@
 import { VideoPlaylistForAccountListQuery } from '@peertube/peertube-models'
 import { pickCommonVideoQuery } from '@server/helpers/query.js'
+import { CONFIG } from '@server/initializers/config.js'
 import { scheduleActorRefreshIfNeeded } from '@server/lib/activitypub/actors/refresh.js'
 import { ActorFollowModel } from '@server/models/actor/actor-follow.js'
 import { getServerActor } from '@server/models/application/application.js'
@@ -208,6 +209,7 @@ async function listAccountPlaylists (req: express.Request, res: express.Response
     count: query.count,
     sort: query.sort,
     search: query.search,
+    searchMethod: CONFIG.SEARCH.SEARCH_METHOD,
 
     type: query.playlistType,
 
@@ -243,6 +245,7 @@ async function listAccountVideos (req: express.Request, res: express.Response) {
     displayOnlyForFollower,
     accountId: account.id,
     user: res.locals.oauth ? res.locals.oauth.token.User : undefined,
+    searchMethod: CONFIG.SEARCH.SEARCH_METHOD,
     countVideos
   }, 'filter:api.accounts.videos.list.params')
 

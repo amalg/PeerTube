@@ -90,7 +90,8 @@ async function searchVideoPlaylistsDB (query: VideoPlaylistsSearchQueryAfterSani
     ...query,
 
     followerActorId: serverActor.id,
-    extendedSearch: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED
+    extendedSearch: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED,
+    searchMethod: CONFIG.SEARCH.SEARCH_METHOD
   }, 'filter:api.search.video-playlists.local.list.params')
 
   const resultList = await Hooks.wrapPromiseFun(

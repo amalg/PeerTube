@@ -168,6 +168,7 @@ async function listMyVideos (req: express.Request, res: express.Response) {
       includeCollaborations: req.query.includeCollaborations || false,
 
       extendedSearch: CONFIG.SEARCH.EXTENDED_SEARCH.ENABLED,
+      searchMethod: CONFIG.SEARCH.SEARCH_METHOD,
 
       countVideos,
 

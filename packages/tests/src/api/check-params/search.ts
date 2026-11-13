@@ -278,6 +278,23 @@ describe('Test videos API validator', function () {
         expectedStatus: HttpStatusCode.OK_200
       })
     })
+
+    it('Should fail with the recent views sort or the hasVideos filter on the search index', async function () {
+      await updateSearchIndex(server, true, false)
+
+      try {
+        for (const customQuery of [ { sort: '-recentViews' }, { hasVideos: true } ]) {
+          await makeGetRequest({
+            url: server.url,
+            path,
+            query: { ...query, ...customQuery, searchTarget: 'search-index' },
+            expectedStatus: HttpStatusCode.BAD_REQUEST_400
+          })
+        }
+      } finally {
+        await updateSearchIndex(server, false, false)
+      }
+    })
   })
 
   describe('Search target', function () {

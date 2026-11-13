@@ -19,6 +19,11 @@ import { VideoModel } from '../video/video.js'
     fields: [ 'videoId' ]
   }, {
     fields: [ 'startDate' ]
+  }, {
+    // Covering index: the channel "recentViews" sort sums the views of a period with an index only scan
+    // No migration on this fork: the startup model sync creates it. Same name and definition as upstream's
+    name: 'video_stat_video_id_start_date',
+    fields: [ literal('"videoId", "startDate") INCLUDE ("views"') as any ]
   } ]
 })
 export class VideoStatModel extends SequelizeModel<VideoStatModel> {

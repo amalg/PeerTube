@@ -6,7 +6,7 @@ import multer, { diskStorage } from 'multer'
 import { Duplex, Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import { CONFIG } from '../initializers/config.js'
-import { REMOTE_SCHEME } from '../initializers/constants.js'
+import { REMOTE_SCHEME, VIDEO_CHANNEL_RECENT_VIEWS } from '../initializers/constants.js'
 import { isArray } from './custom-validators/misc.js'
 import { deleteFileAndCatch } from './fs.js'
 import { createLogger } from './logger.js'
@@ -102,6 +102,36 @@ export function buildAIUsageFilters (options: {
   if (!hidden || hidden.length === 0) return { aiUsageOneOf: undefined }
 
   return { aiUsageOneOf: getAllAIUsages().filter(v => !hidden.includes(v)) }
+}
+
+// ---------------------------------------------------------------------------
+
+// Channel lists rank and filter channels by the videos the requester can see in each one,
+// selected exactly as the channel video list of the same request selects them
+export function buildVideoChannelsListFilters (options: {
+  req: express.Request
+  res: express.Response
+  serverActorId: number
+  serverAccountId: number
+}) {
+  const { req, res, serverActorId, serverAccountId } = options
+
+  return {
+    recentViewsDays: (req.query.recentViewsDays as number) ?? VIDEO_CHANNEL_RECENT_VIEWS.DEFAULT_DAYS,
+    hasVideos: req.query.hasVideos as boolean,
+
+    videoFilters: {
+      ...buildNSFWFilters({ req, res }),
+      ...buildAIUsageFilters({ req, res }),
+
+      displayOnlyForFollower: isUserAbleToSearchRemoteURI(res)
+        ? null
+        : { actorId: serverActorId, orLocalVideos: true },
+
+      user: getAuthUser(res),
+      serverAccountIdForBlock: serverAccountId
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

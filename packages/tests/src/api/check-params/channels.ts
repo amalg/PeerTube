@@ -94,6 +94,15 @@ describe('Test video channels API validator', function () {
         expectedStatus: HttpStatusCode.BAD_REQUEST_400
       })
     })
+
+    it('Should succeed with the recent views sort and filters', async function () {
+      await makeGetRequest({
+        url: server.url,
+        path: videoChannelPath,
+        query: { sort: '-recentViews', recentViewsDays: 30, hasVideos: true, nsfw: 'false' },
+        expectedStatus: HttpStatusCode.OK_200
+      })
+    })
   })
 
   describe('When listing account video channels', function () {

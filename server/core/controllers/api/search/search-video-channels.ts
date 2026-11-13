@@ -10,7 +10,7 @@ import { buildMutedForSearchIndex, isSearchIndexSearch, isURISearch } from '@ser
 import { withReplicaReadsFromRes } from '@server/middlewares/replica-reads.js'
 import { getServerActor } from '@server/models/application/application.js'
 import express from 'express'
-import { isUserAbleToSearchRemoteURI } from '../../../helpers/express-utils.js'
+import { buildVideoChannelsListFilters, isUserAbleToSearchRemoteURI } from '../../../helpers/express-utils.js'
 import { createLogger } from '../../../helpers/logger.js'
 import { getFormattedObjects } from '../../../helpers/utils.js'
 import { getOrCreateAPActor, loadActorUrlFromDB, loadActorUrlOrGetFromWebfinger } from '../../../lib/activitypub/actors/index.js'
@@ -69,7 +69,7 @@ function searchVideoChannels (req: express.Request, res: express.Response) {
     return searchVideoChannelsIndex(query, res)
   }
 
-  return withReplicaReadsFromRes(res, () => searchVideoChannelsDB(query, res))
+  return withReplicaReadsFromRes(res, () => searchVideoChannelsDB(query, req, res))
 }
 
 async function searchVideoChannelsIndex (query: VideoChannelsSearchQueryAfterSanitize, res: express.Response) {
@@ -96,13 +96,15 @@ async function searchVideoChannelsIndex (query: VideoChannelsSearchQueryAfterSan
   }
 }
 
-async function searchVideoChannelsDB (query: VideoChannelsSearchQueryAfterSanitize, res: express.Response) {
+async function searchVideoChannelsDB (query: VideoChannelsSearchQueryAfterSanitize, req: express.Request, res: express.Response) {
   const serverActor = await getServerActor()
 
   const apiOptions = await Hooks.wrapObject({
     ...query,
 
-    actorId: serverActor.id
+    actorId: serverActor.id,
+
+    ...buildVideoChannelsListFilters({ req, res, serverActorId: serverActor.id, serverAccountId: serverActor.Account.id })
   }, 'filter:api.search.video-channels.local.list.params')
 
   const resultList = await Hooks.wrapPromiseFun(

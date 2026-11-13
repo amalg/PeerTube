@@ -19,7 +19,12 @@ import { MChannelBannerAccountDefault } from '@server/types/models/index.js'
 import express from 'express'
 import { auditLoggerFactory, getAuditIdFromRes, VideoChannelAuditView } from '../../../helpers/audit-logger.js'
 import { resetSequelizeInstance } from '../../../helpers/database-utils.js'
-import { buildNSFWFilters, buildVideoChannelsListFilters, getCountVideos, isUserAbleToSearchRemoteURI } from '../../../helpers/express-utils.js'
+import {
+  buildNSFWFilters,
+  buildVideoChannelsListFilters,
+  getCountVideos,
+  isUserAbleToSearchRemoteURI
+} from '../../../helpers/express-utils.js'
 import { logger } from '../../../helpers/logger.js'
 import { getFormattedObjects } from '../../../helpers/utils.js'
 import { sequelizeTypescript } from '../../../initializers/database.js'

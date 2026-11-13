@@ -11,6 +11,7 @@ import {
   toCompleteUUIDs
 } from '../../helpers/custom-validators/misc.js'
 import { areValidationErrors } from './shared/index.js'
+import { buildVideoChannelsListFiltersValidator } from './videos/video-channels.js'
 
 const videosSearchValidator = [
   query('search')
@@ -74,6 +75,8 @@ const videoChannelsListSearchValidator = [
     .customSanitizer(toArray)
     .custom(v => hasArrayLength(v, { max: 100 }))
     .custom(isNotEmptyStringArray).withMessage('Should have valid array of handles'),
+
+  ...buildVideoChannelsListFiltersValidator(),
 
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (areValidationErrors(req, res)) return

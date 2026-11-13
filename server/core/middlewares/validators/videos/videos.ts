@@ -523,6 +523,27 @@ export function getCommonVideoEditAttributes () {
   ] as (ValidationChain | ExpressPromiseHandler)[]
 }
 
+// Also used by the channel lists, whose recent views ranking applies the same video filters as a channel video list
+export function buildVideosNSFWAndAIUsageFiltersValidator () {
+  return [
+    query('aiUsageOneOf')
+      .optional()
+      .customSanitizer(toIntArray)
+      .custom(isVideoAIUsageArrayValid).withMessage('Should have a valid aiUsageOneOf array'),
+    query('nsfw')
+      .optional()
+      .custom(isBooleanBothQueryValid),
+    query('nsfwFlagsIncluded')
+      .optional()
+      .customSanitizer(toIntOrNull)
+      .custom(isNSFWFlagsValid),
+    query('nsfwFlagsExcluded')
+      .optional()
+      .customSanitizer(toIntOrNull)
+      .custom(isNSFWFlagsValid)
+  ]
+}
+
 export const commonVideosFiltersValidatorFactory = (options: {
   allowPrivacyFilterForAllUsers?: boolean
 } = {}) => {
@@ -539,10 +560,7 @@ export const commonVideosFiltersValidatorFactory = (options: {
       .optional()
       .customSanitizer(toArray)
       .custom(isStringArray).withMessage('Should have a valid languageOneOf array'),
-    query('aiUsageOneOf')
-      .optional()
-      .customSanitizer(toIntArray)
-      .custom(isVideoAIUsageArrayValid).withMessage('Should have a valid aiUsageOneOf array'),
+    ...buildVideosNSFWAndAIUsageFiltersValidator(),
     query('privacyOneOf')
       .optional()
       .customSanitizer(toArray)
@@ -555,17 +573,6 @@ export const commonVideosFiltersValidatorFactory = (options: {
       .optional()
       .customSanitizer(toArray)
       .custom(isStringArray).withMessage('Should have a valid tagsAllOf array'),
-    query('nsfw')
-      .optional()
-      .custom(isBooleanBothQueryValid),
-    query('nsfwFlagsIncluded')
-      .optional()
-      .customSanitizer(toIntOrNull)
-      .custom(isNSFWFlagsValid),
-    query('nsfwFlagsExcluded')
-      .optional()
-      .customSanitizer(toIntOrNull)
-      .custom(isNSFWFlagsValid),
     query('isLive')
       .optional()
       .customSanitizer(toBooleanOrNull)

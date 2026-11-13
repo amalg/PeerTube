@@ -62,7 +62,13 @@ function pickSearchChannelQuery (query: VideoChannelsSearchQueryAfterSanitize) {
     'count',
     'sort',
     'host',
-    'handles'
+    'handles',
+    'recentViewsDays',
+    'hasVideos',
+    'nsfw',
+    'nsfwFlagsIncluded',
+    'nsfwFlagsExcluded',
+    'aiUsageOneOf'
   ])
 }
 

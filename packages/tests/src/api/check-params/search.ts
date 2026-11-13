@@ -237,6 +237,30 @@ describe('Test videos API validator', function () {
       await makeGetRequest({ url: server.url, path, query: customQuery, expectedStatus: HttpStatusCode.BAD_REQUEST_400 })
     })
 
+    it('Should fail with a bad recentViewsDays', async function () {
+      for (const recentViewsDays of [ 0, 3651, 'a' ]) {
+        await makeGetRequest({
+          url: server.url,
+          path,
+          query: { ...query, recentViewsDays },
+          expectedStatus: HttpStatusCode.BAD_REQUEST_400
+        })
+      }
+    })
+
+    it('Should fail with a bad hasVideos', async function () {
+      await makeGetRequest({
+        url: server.url,
+        path,
+        query: { ...query, hasVideos: 'maybe' },
+        expectedStatus: HttpStatusCode.BAD_REQUEST_400
+      })
+    })
+
+    it('Should fail with a bad nsfw', async function () {
+      await makeGetRequest({ url: server.url, path, query: { ...query, nsfw: 'maybe' }, expectedStatus: HttpStatusCode.BAD_REQUEST_400 })
+    })
+
     it('Should succeed with the correct parameters', async function () {
       await makeGetRequest({
         url: server.url,

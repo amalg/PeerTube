@@ -140,6 +140,8 @@ export const SORTABLE_COLUMNS = {
   ACCOUNTS: [ 'createdAt' ],
   JOBS: [ 'createdAt' ],
   VIDEO_CHANNELS: [ 'id', 'name', 'updatedAt', 'createdAt' ],
+  // Only the server channel list can rank by recent views, not the account channel list
+  VIDEO_CHANNELS_LIST: [ 'id', 'name', 'updatedAt', 'createdAt', 'recentViews' ],
   VIDEO_IMPORTS: [ 'createdAt' ],
   VIDEO_CHANNEL_SYNCS: [ 'externalChannelUrl', 'videoChannel', 'createdAt', 'lastSyncAt', 'state' ],
 
@@ -185,7 +187,7 @@ export const SORTABLE_COLUMNS = {
 
   // Don't forget to update peertube-search-index with the same values
   VIDEOS_SEARCH: [ 'name', 'duration', 'createdAt', 'publishedAt', 'originallyPublishedAt', 'views', 'likes', 'match', 'hot' ],
-  VIDEO_CHANNELS_SEARCH: [ 'match', 'displayName', 'createdAt' ],
+  VIDEO_CHANNELS_SEARCH: [ 'match', 'displayName', 'createdAt', 'recentViews' ],
   VIDEO_PLAYLISTS_SEARCH: [ 'match', 'displayName', 'createdAt' ],
 
   ABUSES: [ 'id', 'createdAt', 'state' ],
@@ -905,6 +907,12 @@ export const VIDEO_CHANNEL_ACTIVITY_TARGETS: { [id in VideoChannelActivityTarget
   [VideoChannelActivityTarget.PLAYLIST]: 'Playlist',
   [VideoChannelActivityTarget.VIDEO]: 'Video',
   [VideoChannelActivityTarget.VIDEO_IMPORT]: 'Video import'
+}
+
+// Period of the "recentViews" channel sort, in days
+export const VIDEO_CHANNEL_RECENT_VIEWS = {
+  DEFAULT_DAYS: 365,
+  MAX_DAYS: 3650
 }
 
 export const VIDEO_EMBED_PRIVACY_POLICIES: { [id in VideoEmbedPrivacyPolicyType]: string } = {

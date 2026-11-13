@@ -269,6 +269,15 @@ describe('Test videos API validator', function () {
         expectedStatus: HttpStatusCode.OK_200
       })
     })
+
+    it('Should succeed with the recent views sort and filters', async function () {
+      await makeGetRequest({
+        url: server.url,
+        path,
+        query: { ...query, sort: '-recentViews', recentViewsDays: 30, hasVideos: true, nsfw: 'false' },
+        expectedStatus: HttpStatusCode.OK_200
+      })
+    })
   })
 
   describe('Search target', function () {

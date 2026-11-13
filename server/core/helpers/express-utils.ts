@@ -3,7 +3,7 @@ import { getLowercaseExtension } from '@peertube/peertube-node-utils'
 import express, { RequestHandler } from 'express'
 import multer, { diskStorage } from 'multer'
 import { CONFIG } from '../initializers/config.js'
-import { REMOTE_SCHEME } from '../initializers/constants.js'
+import { REMOTE_SCHEME, VIDEO_CHANNEL_RECENT_VIEWS } from '../initializers/constants.js'
 import { isArray } from './custom-validators/misc.js'
 import { logger } from './logger.js'
 import { deleteFileAndCatch, generateRandomString } from './utils.js'
@@ -79,6 +79,35 @@ function buildNSFWFlagsExcluded (options: {
   if (user) return user.nsfwFlagsHidden
 
   return undefined
+}
+
+// ---------------------------------------------------------------------------
+
+// Channel lists rank and filter channels by the videos the requester can see in each one,
+// selected exactly as the channel video list of the same request selects them
+export function buildVideoChannelsListFilters (options: {
+  req: express.Request
+  res: express.Response
+  serverActorId: number
+  serverAccountId: number
+}) {
+  const { req, res, serverActorId, serverAccountId } = options
+
+  return {
+    recentViewsDays: (req.query.recentViewsDays as number) ?? VIDEO_CHANNEL_RECENT_VIEWS.DEFAULT_DAYS,
+    hasVideos: req.query.hasVideos as boolean,
+
+    videoFilters: {
+      ...buildNSFWFilters({ req, res }),
+
+      displayOnlyForFollower: isUserAbleToSearchRemoteURI(res)
+        ? null
+        : { actorId: serverActorId, orLocalVideos: true },
+
+      user: getAuthUser(res),
+      serverAccountIdForBlock: serverAccountId
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

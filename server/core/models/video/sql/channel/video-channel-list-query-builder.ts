@@ -1,8 +1,10 @@
 import { ActorImageType, VideoChannelCollaboratorState } from '@peertube/peertube-models'
-import { WEBSERVER } from '@server/initializers/constants.js'
+import { CONFIG } from '@server/initializers/config.js'
+import { VIDEO_CHANNEL_RECENT_VIEWS, WEBSERVER } from '@server/initializers/constants.js'
 import { AbstractListQuery, AbstractListQueryOptions } from '@server/models/shared/abstract-list-query.js'
 import { buildServerIdsFollowedBy, buildSortDirectionAndField } from '@server/models/shared/index.js'
 import { OrderItem, Sequelize } from 'sequelize'
+import { BuildVideosListQueryOptions, VideosIdListQueryBuilder } from '../video/videos-id-list-query-builder.js'
 import { VideoChannelTableAttributes } from './video-channel-table-attributes.js'
 
 export interface ListVideoChannelsOptions extends AbstractListQueryOptions {
@@ -19,6 +21,19 @@ export interface ListVideoChannelsOptions extends AbstractListQueryOptions {
   includeCollaborations?: boolean
 
   statsDaysPrior?: number
+
+  // Period of the "recentViews" sort
+  // default: VIDEO_CHANNEL_RECENT_VIEWS.DEFAULT_DAYS
+  recentViewsDays?: number
+
+  // Only list channels with at least one video in videoFilters
+  hasVideos?: boolean
+
+  // Videos counted by the "recentViews" sort and the hasVideos filter: the ones a channel video list displays to the requester
+  videoFilters?: Pick<
+    BuildVideosListQueryOptions,
+    'user' | 'nsfw' | 'nsfwFlagsIncluded' | 'nsfwFlagsExcluded' | 'displayOnlyForFollower' | 'serverAccountIdForBlock'
+  >
 }
 
 export class VideoChannelListQueryBuilder extends AbstractListQuery {
@@ -30,6 +45,7 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
   private builtAccountAvatarJoin = false
   private builtChannelAvatarJoin = false
   private builtChannelBannerJoin = false
+  private builtVisibleVideoCTE = false
 
   constructor (
     protected readonly sequelize: Sequelize,
@@ -127,6 +143,12 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
       this.subQueryAttributes.push('0 as similarity')
     }
 
+    if (this.options.hasVideos === true) {
+      this.buildVisibleVideoCTE()
+
+      where.push('EXISTS (SELECT 1 FROM "visibleVideo" WHERE "visibleVideo"."channelId" = "VideoChannelModel"."id")')
+    }
+
     if (where.length !== 0) {
       this.subQueryWhere = `WHERE ${where.join(' AND ')}`
     }
@@ -166,6 +188,47 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
     this.replacements.accountId = this.options.accountId
 
     this.builtChannelCollaboratorsJoin = true
+  }
+
+  // Videos of the "recentViews" sort and the hasVideos filter: the ones a channel video list displays to the requester,
+  // selected by the video list query builder itself so both keep the same privacy, state, blocklist and NSFW rules
+  private buildVisibleVideoCTE () {
+    if (this.builtVisibleVideoCTE) return
+
+    // Without filters: the videos of an anonymous list
+    const videoFilters = this.options.videoFilters ?? { serverAccountIdForBlock: undefined, displayOnlyForFollower: null }
+
+    const { query, replacements } = new VideosIdListQueryBuilder(this.sequelize).getQuery({
+      ...videoFilters,
+
+      attributes: [ '"video"."id"', '"video"."channelId"' ],
+      // No sort/pagination, and use the follower filter adapted to aggregations
+      isCount: true,
+      start: undefined,
+      count: undefined,
+      sort: undefined,
+      trendingDays: CONFIG.TRENDING.VIDEOS.INTERVAL_DAYS
+    })
+
+    // Prefix the video query replacements so they can't clash with the channel query ones (host, accountId...)
+    let prefixedQuery: string = query
+
+    for (const [ key, value ] of Object.entries(replacements)) {
+      const prefixedKey = 'visibleVideo_' + key
+
+      prefixedQuery = prefixedQuery.replace(new RegExp(`(?<![:\\w]):${key}(?!\\w)`, 'g'), ':' + prefixedKey)
+      this.replacements[prefixedKey] = value as any
+    }
+
+    this.subQueryCTE.push(`"visibleVideo" AS (${prefixedQuery})`)
+
+    this.builtVisibleVideoCTE = true
+  }
+
+  private isRecentViewsSort () {
+    if (!this.options.sort) return false
+
+    return buildSortDirectionAndField(this.options.sort).field === 'recentViews'
   }
 
   // ---------------------------------------------------------------------------
@@ -257,6 +320,24 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
     this.buildAccountJoin()
   }
 
+  protected buildSubQueryLateralJoin () {
+    if (!this.isRecentViewsSort()) return
+
+    this.buildVisibleVideoCTE()
+
+    this.subQueryLateralJoin += 'LEFT JOIN LATERAL (' +
+      'SELECT COALESCE(SUM("videoStat"."views"), 0) AS "recentViews" ' +
+      'FROM "visibleVideo" ' +
+      'INNER JOIN "videoStat" ON "videoStat"."videoId" = "visibleVideo"."id" ' +
+      'WHERE "visibleVideo"."channelId" = "VideoChannelModel"."id" ' +
+      'AND "videoStat"."startDate" >= now() - make_interval(days => :recentViewsDays)' +
+      ') AS "RecentViews" ON TRUE '
+
+    this.replacements.recentViewsDays = this.options.recentViewsDays ?? VIDEO_CHANNEL_RECENT_VIEWS.DEFAULT_DAYS
+
+    this.subQueryAttributes.push('"RecentViews"."recentViews" AS "recentViews"')
+  }
+
   protected buildSubQueryAttributes () {
     this.subQueryAttributes = [
       ...this.subQueryAttributes,
@@ -273,7 +354,7 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
   }
 
   protected getCalculatedAttributes () {
-    return [ 'similarity' ]
+    return [ 'similarity', 'recentViews' ]
   }
 
   protected getSort (sort: string): OrderItem[] {
@@ -281,6 +362,9 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
 
     // The channel display name is stored in the "name" column
     if (field === 'displayName') return [ [ 'name', direction ], [ 'id', 'ASC' ] ]
+
+    // Channels with the same views keep a stable order across pages
+    if (field === 'recentViews') return [ [ 'recentViews', direction ], [ 'name', 'ASC' ], [ 'id', 'ASC' ] ]
 
     return super.getSort(sort)
   }

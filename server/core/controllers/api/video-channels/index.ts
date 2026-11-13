@@ -19,7 +19,7 @@ import { MChannelBannerAccountDefault } from '@server/types/models/index.js'
 import express from 'express'
 import { auditLoggerFactory, getAuditIdFromRes, VideoChannelAuditView } from '../../../helpers/audit-logger.js'
 import { resetSequelizeInstance } from '../../../helpers/database-utils.js'
-import { buildNSFWFilters, getCountVideos, isUserAbleToSearchRemoteURI } from '../../../helpers/express-utils.js'
+import { buildNSFWFilters, buildVideoChannelsListFilters, getCountVideos, isUserAbleToSearchRemoteURI } from '../../../helpers/express-utils.js'
 import { logger } from '../../../helpers/logger.js'
 import { getFormattedObjects } from '../../../helpers/utils.js'
 import { sequelizeTypescript } from '../../../initializers/database.js'
@@ -194,7 +194,9 @@ async function listVideoChannels (req: express.Request, res: express.Response) {
     actorId: serverActor.id,
     start: req.query.start,
     count: req.query.count,
-    sort: req.query.sort
+    sort: req.query.sort,
+
+    ...buildVideoChannelsListFilters({ req, res, serverActorId: serverActor.id, serverAccountId: serverActor.Account.id })
   }, 'filter:api.video-channels.list.params')
 
   const resultList = await Hooks.wrapPromiseFun(

@@ -1,5 +1,6 @@
 import { isSearchTargetValid } from '@server/helpers/custom-validators/search.js'
 import { isHostValid } from '@server/helpers/custom-validators/servers.js'
+import { isSearchIndexSearch } from '@server/lib/search.js'
 import express from 'express'
 import { query } from 'express-validator'
 import {
@@ -80,6 +81,13 @@ const videoChannelsListSearchValidator = [
 
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (areValidationErrors(req, res)) return
+
+    // The search index doesn't know which videos the requester can see on this server
+    const isRecentViewsSort = typeof req.query.sort === 'string' && req.query.sort.replace(/^-/, '') === 'recentViews'
+
+    if (isSearchIndexSearch(req.query) && (isRecentViewsSort || req.query.hasVideos === true)) {
+      return res.fail({ message: req.t('The recentViews sort and the hasVideos filter are not supported by the search index') })
+    }
 
     return next()
   }

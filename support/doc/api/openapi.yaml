@@ -8813,7 +8813,8 @@ components:
       description: >
         Sort channels by criteria (prefixing with `-` means `DESC` order).
         `recentViews` sorts by the views, during the last `recentViewsDays` days, of the channel videos the requester can see
-        (see `hasVideos`), then by display name and id. `-recentViews` lists the most viewed channels first
+        (see `hasVideos`), then by display name and id. `-recentViews` lists the most viewed channels first.
+        The search index can't sort by `recentViews`: such a search sent to it fails with a 400
       schema:
         type: string
         enum:
@@ -8842,7 +8843,8 @@ components:
         Only list channels with at least one video the requester can see: the videos the channel video list
         (`/api/v1/video-channels/{channelHandle}/videos`) returns to the same requester with default parameters,
         so public videos, and internal videos for authenticated users, filtered by the `nsfw`, `nsfwFlagsIncluded`
-        and `nsfwFlagsExcluded` parameters. These videos are also the ones counted by the `recentViews` sort
+        and `nsfwFlagsExcluded` parameters. These videos are also the ones counted by the `recentViews` sort.
+        `false` is the same as omitting it. A channel search sent to the search index can't use it (400)
       schema:
         type: boolean
     commentsSort:

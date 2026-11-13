@@ -21,7 +21,9 @@ import { VideoModel } from '../video/video.js'
     },
     {
       // Used by the video files lifecycle policies
-      fields: [ 'videoId', 'startDate' ]
+      // Covering index: the channel "recentViews" sort sums the views of a period with an index only scan
+      name: 'video_stat_video_id_start_date',
+      fields: [ literal('"videoId", "startDate") INCLUDE ("views"') as any ]
     }
   ]
 })

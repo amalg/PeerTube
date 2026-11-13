@@ -5158,7 +5158,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/start'
         - $ref: '#/components/parameters/count'
-        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/videoChannelsSort'
+        - $ref: '#/components/parameters/recentViewsDays'
+        - $ref: '#/components/parameters/hasVideos'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/nsfwFlagsIncluded'
+        - $ref: '#/components/parameters/nsfwFlagsExcluded'
       responses:
         '200':
           description: successful operation
@@ -6552,9 +6557,14 @@ paths:
         - $ref: '#/components/parameters/start'
         - $ref: '#/components/parameters/count'
         - $ref: '#/components/parameters/searchTarget'
-        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/videoChannelsSearchSort'
         - $ref: '#/components/parameters/host'
         - $ref: '#/components/parameters/handles'
+        - $ref: '#/components/parameters/recentViewsDays'
+        - $ref: '#/components/parameters/hasVideos'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/nsfwFlagsIncluded'
+        - $ref: '#/components/parameters/nsfwFlagsExcluded'
       responses:
         '200':
           description: successful operation
@@ -8780,6 +8790,61 @@ components:
         - -views
         - -likes
         - -match
+    videoChannelsSort:
+      name: sort
+      in: query
+      required: false
+      description: >
+        Sort channels by criteria (prefixing with `-` means `DESC` order).
+        `recentViews` sorts by the views, during the last `recentViewsDays` days, of the channel videos the requester can see
+        (see `hasVideos`), then by display name and id. `-recentViews` lists the most viewed channels first
+      schema:
+        type: string
+        enum:
+        - id
+        - name
+        - -updatedAt
+        - -createdAt
+        - -recentViews
+    videoChannelsSearchSort:
+      name: sort
+      in: query
+      required: false
+      description: >
+        Sort channels by criteria (prefixing with `-` means `DESC` order).
+        `recentViews` sorts by the views, during the last `recentViewsDays` days, of the channel videos the requester can see
+        (see `hasVideos`), then by display name and id. `-recentViews` lists the most viewed channels first
+      schema:
+        type: string
+        enum:
+        - -match
+        - displayName
+        - -createdAt
+        - -recentViews
+    recentViewsDays:
+      name: recentViewsDays
+      in: query
+      required: false
+      description: >
+        Period of the `recentViews` sort, in days.
+        Views older than `views.videos.local.max_age` (local videos) or `views.videos.remote.max_age` (remote videos)
+        are already deleted by the server, so they can't count
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 3650
+        default: 365
+    hasVideos:
+      name: hasVideos
+      in: query
+      required: false
+      description: >
+        Only list channels with at least one video the requester can see: the videos the channel video list
+        (`/api/v1/video-channels/{channelHandle}/videos`) returns to the same requester with default parameters,
+        so public videos, and internal videos for authenticated users, filtered by the `nsfw`, `nsfwFlagsIncluded`
+        and `nsfwFlagsExcluded` parameters. These videos are also the ones counted by the `recentViews` sort
+      schema:
+        type: boolean
     commentsSort:
       name: sort
       in: query

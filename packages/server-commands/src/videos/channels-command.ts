@@ -7,6 +7,7 @@ import {
   VideoChannelActivity,
   VideoChannelCreate,
   VideoChannelCreateResult,
+  VideoChannelsListQuery,
   VideoChannelUpdate,
   VideosImportInChannelCreate
 } from '@peertube/peertube-models'
@@ -14,19 +15,28 @@ import { unwrapBody } from '../requests/index.js'
 import { AbstractCommand, OverrideCommandOptions } from '../shared/index.js'
 
 export class ChannelsCommand extends AbstractCommand {
-  list (options: OverrideCommandOptions & {
-    start?: number
-    count?: number
-    sort?: string
-    withStats?: boolean
-  } = {}) {
+  list (
+    options: OverrideCommandOptions & VideoChannelsListQuery & {
+      withStats?: boolean
+    } = {}
+  ) {
     const path = '/api/v1/video-channels'
 
     return this.getRequestBody<ResultList<VideoChannel>>({
       ...options,
 
       path,
-      query: pick(options, [ 'start', 'count', 'sort', 'withStats' ]),
+      query: pick(options, [
+        'start',
+        'count',
+        'sort',
+        'withStats',
+        'recentViewsDays',
+        'hasVideos',
+        'nsfw',
+        'nsfwFlagsIncluded',
+        'nsfwFlagsExcluded'
+      ]),
       implicitToken: false,
       defaultExpectedStatus: HttpStatusCode.OK_200
     })

@@ -495,6 +495,23 @@ export function getCommonVideoEditAttributes () {
   ] as (ValidationChain | ExpressPromiseHandler)[]
 }
 
+// Also used by the channel lists, whose recent views ranking applies the same video filters as a channel video list
+export function buildVideosNSFWFiltersValidator () {
+  return [
+    query('nsfw')
+      .optional()
+      .custom(isBooleanBothQueryValid),
+    query('nsfwFlagsIncluded')
+      .optional()
+      .customSanitizer(toIntOrNull)
+      .custom(isNSFWFlagsValid),
+    query('nsfwFlagsExcluded')
+      .optional()
+      .customSanitizer(toIntOrNull)
+      .custom(isNSFWFlagsValid)
+  ]
+}
+
 export const commonVideosFiltersValidatorFactory = (options: {
   allowPrivacyFilterForAllUsers?: boolean
 } = {}) => {
@@ -511,6 +528,7 @@ export const commonVideosFiltersValidatorFactory = (options: {
       .optional()
       .customSanitizer(toArray)
       .custom(isStringArray).withMessage('Should have a valid languageOneOf array'),
+    ...buildVideosNSFWFiltersValidator(),
     query('privacyOneOf')
       .optional()
       .customSanitizer(toArray)
@@ -523,17 +541,6 @@ export const commonVideosFiltersValidatorFactory = (options: {
       .optional()
       .customSanitizer(toArray)
       .custom(isStringArray).withMessage('Should have a valid tagsAllOf array'),
-    query('nsfw')
-      .optional()
-      .custom(isBooleanBothQueryValid),
-    query('nsfwFlagsIncluded')
-      .optional()
-      .customSanitizer(toIntOrNull)
-      .custom(isNSFWFlagsValid),
-    query('nsfwFlagsExcluded')
-      .optional()
-      .customSanitizer(toIntOrNull)
-      .custom(isNSFWFlagsValid),
     query('isLive')
       .optional()
       .customSanitizer(toBooleanOrNull)

@@ -1,6 +1,7 @@
 import { HttpStatusCode, VideosImportInChannelCreate } from '@peertube/peertube-models'
 import { isUrlValid } from '@server/helpers/custom-validators/activitypub/misc.js'
 import { CONFIG } from '@server/initializers/config.js'
+import { VIDEO_CHANNEL_RECENT_VIEWS } from '@server/initializers/constants.js'
 import { loadReservedActorName } from '@server/lib/local-actor.js'
 import { MChannelAccountDefault } from '@server/types/models/index.js'
 import express from 'express'
@@ -15,6 +16,24 @@ import {
 import { VideoChannelModel } from '../../../models/video/video-channel.js'
 import { areValidationErrors, checkUserQuota, doesChannelHandleExist } from '../shared/index.js'
 import { doesVideoChannelSyncIdExist } from '../shared/video-channel-syncs.js'
+import { buildVideosNSFWFiltersValidator } from './videos.js'
+
+// Channel lists can be ranked and filtered by the videos the requester can see in each channel
+export function buildVideoChannelsListFiltersValidator () {
+  return [
+    query('recentViewsDays')
+      .optional()
+      .isInt({ min: 1, max: VIDEO_CHANNEL_RECENT_VIEWS.MAX_DAYS }).withMessage('Should have a valid recentViewsDays')
+      .toInt(),
+    query('hasVideos')
+      .optional()
+      // Validate before sanitizing: toBooleanOrNull turns any other string into true
+      .custom(isBooleanValid).withMessage('Should have a valid hasVideos boolean')
+      .customSanitizer(toBooleanOrNull),
+
+    ...buildVideosNSFWFiltersValidator()
+  ]
+}
 
 export const videoChannelsAddValidator = [
   body('name')
@@ -123,6 +142,8 @@ export const videoChannelsListValidator = [
   query('search')
     .optional()
     .not().isEmpty(),
+
+  ...buildVideoChannelsListFiltersValidator(),
 
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (areValidationErrors(req, res)) return

@@ -38,8 +38,8 @@ import {
   setDefaultSort,
   setDefaultVideosSort,
   videoChannelsAddValidator,
+  videoChannelsListSortValidator,
   videoChannelsRemoveValidator,
-  videoChannelsSortValidator,
   videoChannelsUpdateValidator,
   videoPlaylistsSortValidator
 } from '../../../middlewares/index.js'
@@ -76,9 +76,10 @@ videoChannelRouter.use(ownershipChannelRouter)
 videoChannelRouter.get(
   '/',
   paginationValidator,
-  videoChannelsSortValidator,
+  videoChannelsListSortValidator,
   setDefaultSort,
   setDefaultPagination,
+  optionalAuthenticate,
   videoChannelsListValidator,
   asyncMiddleware(listVideoChannels)
 )

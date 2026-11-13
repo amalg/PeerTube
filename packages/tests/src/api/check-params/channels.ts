@@ -65,6 +65,35 @@ describe('Test video channels API validator', function () {
     it('Should fail with an incorrect sort', async function () {
       await checkBadSort(server.url, videoChannelPath, server.accessToken)
     })
+
+    it('Should fail with a bad recentViewsDays', async function () {
+      for (const recentViewsDays of [ 0, 3651, 'a' ]) {
+        await makeGetRequest({
+          url: server.url,
+          path: videoChannelPath,
+          query: { recentViewsDays },
+          expectedStatus: HttpStatusCode.BAD_REQUEST_400
+        })
+      }
+    })
+
+    it('Should fail with a bad hasVideos', async function () {
+      await makeGetRequest({
+        url: server.url,
+        path: videoChannelPath,
+        query: { hasVideos: 'maybe' },
+        expectedStatus: HttpStatusCode.BAD_REQUEST_400
+      })
+    })
+
+    it('Should fail with a bad nsfw', async function () {
+      await makeGetRequest({
+        url: server.url,
+        path: videoChannelPath,
+        query: { nsfw: 'maybe' },
+        expectedStatus: HttpStatusCode.BAD_REQUEST_400
+      })
+    })
   })
 
   describe('When listing account video channels', function () {

@@ -17,6 +17,7 @@ export const videoCommentThreadsSortValidator = checkSortFactory(SORTABLE_COLUMN
 export const videoRatesSortValidator = checkSortFactory(SORTABLE_COLUMNS.VIDEO_RATES)
 export const blacklistSortValidator = checkSortFactory(SORTABLE_COLUMNS.BLACKLISTS)
 export const videoChannelsSortValidator = checkSortFactory(SORTABLE_COLUMNS.VIDEO_CHANNELS)
+export const videoChannelsListSortValidator = checkSortFactory(SORTABLE_COLUMNS.VIDEO_CHANNELS_LIST)
 export const instanceFollowersSortValidator = checkSortFactory(SORTABLE_COLUMNS.INSTANCE_FOLLOWERS)
 export const instanceFollowingSortValidator = checkSortFactory(SORTABLE_COLUMNS.INSTANCE_FOLLOWING)
 export const userSubscriptionsSortValidator = checkSortFactory(SORTABLE_COLUMNS.USER_SUBSCRIPTIONS)

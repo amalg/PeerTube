@@ -387,24 +387,32 @@ export class VideoChannelListQueryBuilder extends AbstractListQuery {
   protected buildSubQueryJoin () {
     this.buildActorJoin()
     this.buildAccountJoin()
+
+    if (this.isRecentViewsSort()) {
+      this.buildChannelRecentViewsJoin()
+    }
   }
 
-  protected buildSubQueryLateralJoin () {
-    if (!this.isRecentViewsSort()) return
-
+  private buildChannelRecentViewsJoin () {
     this.buildVisibleVideoCTE()
 
-    this.subQueryLateralJoin += 'LEFT JOIN LATERAL (' +
-      'SELECT COALESCE(SUM("videoStat"."views"), 0) AS "recentViews" ' +
-      'FROM "visibleVideo" ' +
-      'INNER JOIN "videoStat" ON "videoStat"."videoId" = "visibleVideo"."id" ' +
-      'WHERE "visibleVideo"."channelId" = "VideoChannelModel"."id" ' +
-      'AND "videoStat"."startDate" >= now() - make_interval(days => :recentViewsDays)' +
-      ') AS "RecentViews" ON TRUE '
+    // Sum the views of every channel in a single pass over the period's stats,
+    // instead of a correlated subquery per channel that would scan the visible videos each time
+    this.subQueryCTE.push(
+      '"channelRecentViews" AS (' +
+        'SELECT "visibleVideo"."channelId", SUM("videoStat"."views") AS "views" ' +
+        'FROM "videoStat" ' +
+        'INNER JOIN "visibleVideo" ON "visibleVideo"."id" = "videoStat"."videoId" ' +
+        'WHERE "videoStat"."startDate" >= now() - make_interval(days => :recentViewsDays) ' +
+        'GROUP BY "visibleVideo"."channelId"' +
+        ')'
+    )
+
+    this.subQueryJoin += ' LEFT JOIN "channelRecentViews" ON "channelRecentViews"."channelId" = "VideoChannelModel"."id" '
 
     this.replacements.recentViewsDays = this.options.recentViewsDays ?? VIDEO_CHANNEL_RECENT_VIEWS.DEFAULT_DAYS
 
-    this.subQueryAttributes.push('"RecentViews"."recentViews" AS "recentViews"')
+    this.subQueryAttributes.push('COALESCE("channelRecentViews"."views", 0) AS "recentViews"')
   }
 
   protected buildSubQueryAttributes () {
